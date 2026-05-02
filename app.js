@@ -485,24 +485,35 @@ function computeSchedule() {
   state.gantt = { rowOrder, start, end, duration, totalWeeks, criticalPath, criticalSet };
 }
 
-function ganttCanvasSize() {
+function ganttWeekPx(total) {
+  const wrap = document.getElementById('canvas-wrap');
+  const wrapW = wrap?.clientWidth || 720;
+  const available = wrapW - LABEL_COL_W - 48;
+  if (total <= 0) return WEEK_PX;
+  const fit = Math.floor(available / total);
+  // Floor at WEEK_PX (so wide schedules scroll), cap at 80 (so short schedules don't grow absurdly).
+  return Math.min(80, Math.max(WEEK_PX, fit));
+}
+
+function ganttCanvasSize(weekPx) {
   const total = Math.max(state.gantt.totalWeeks, 1);
-  const w = LABEL_COL_W + total * WEEK_PX + 24;
+  const w = LABEL_COL_W + total * weekPx + 24;
   const h = HEADER_H + state.gantt.rowOrder.length * ROW_H + FOOTER_H;
   return { w: Math.max(w, 720), h: Math.max(h, 320) };
 }
 
 function renderGantt(canvas) {
   computeSchedule();
-  const size = ganttCanvasSize();
+  const total = state.gantt.totalWeeks;
+  const weekPx = ganttWeekPx(total);
+  const size = ganttCanvasSize(weekPx);
   canvas.setAttribute('width', size.w);
   canvas.setAttribute('height', size.h);
   canvas.setAttribute('viewBox', `0 0 ${size.w} ${size.h}`);
   canvas.innerHTML = '';
 
-  const total = state.gantt.totalWeeks;
   const chartLeft = LABEL_COL_W;
-  const chartRight = LABEL_COL_W + total * WEEK_PX;
+  const chartRight = LABEL_COL_W + total * weekPx;
   const chartTop = HEADER_H;
   const chartBottom = HEADER_H + state.gantt.rowOrder.length * ROW_H;
 
@@ -546,8 +557,8 @@ function renderGantt(canvas) {
     phases.push({ label: 'Schedule', from: 0, to: total });
   }
   for (const p of phases) {
-    const x1 = chartLeft + p.from * WEEK_PX;
-    const x2 = chartLeft + p.to * WEEK_PX;
+    const x1 = chartLeft + p.from * weekPx;
+    const x2 = chartLeft + p.to * weekPx;
     const t = svg('text', {
       class: 'gantt-phase-label',
       x: (x1 + x2) / 2,
@@ -557,9 +568,10 @@ function renderGantt(canvas) {
     t.textContent = p.label;
     header.appendChild(t);
   }
-  // Week numbers every 8 weeks
-  for (let w = 0; w <= total; w += 8) {
-    const x = chartLeft + w * WEEK_PX;
+  // Week numbers — interval scales with total length so labels stay legible.
+  const tickEvery = total <= 8 ? 1 : total <= 24 ? 4 : 8;
+  for (let w = 0; w <= total; w += tickEvery) {
+    const x = chartLeft + w * weekPx;
     const t = svg('text', {
       class: 'gantt-week-label',
       x, y: 38,
@@ -577,8 +589,8 @@ function renderGantt(canvas) {
 
   // --- Grid lines ---
   const grid = svg('g', { 'data-layer': 'gantt-grid' });
-  for (let w = 0; w <= total; w += 8) {
-    const x = chartLeft + w * WEEK_PX;
+  for (let w = 0; w <= total; w += tickEvery) {
+    const x = chartLeft + w * weekPx;
     grid.appendChild(svg('line', {
       class: 'gantt-grid-line',
       x1: x, x2: x, y1: chartTop, y2: chartBottom
@@ -586,7 +598,7 @@ function renderGantt(canvas) {
   }
   // Phase boundary markers (dashed)
   for (const p of phases.slice(1)) {
-    const x = chartLeft + p.from * WEEK_PX;
+    const x = chartLeft + p.from * weekPx;
     grid.appendChild(svg('line', {
       class: 'gantt-phase-marker',
       x1: x, x2: x, y1: chartTop, y2: chartBottom
@@ -605,8 +617,8 @@ function renderGantt(canvas) {
     const isRequired = state.derived.required.has(id) && !isSelected;
 
     const y = chartTop + rowIdx * ROW_H;
-    const barX = chartLeft + s * WEEK_PX;
-    const barW = Math.max(dur * WEEK_PX, 4);
+    const barX = chartLeft + s * weekPx;
+    const barW = Math.max(dur * weekPx, 4);
 
     // Row label (clickable)
     const rowG = svg('g', {
@@ -1660,6 +1672,13 @@ function wire() {
       if (state.selected.size) resetSelection();
       else if (search.value) { search.value = ''; state.filter.search = ''; applyVisualState(); }
     }
+  });
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (state.view !== 'gantt') return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => renderCanvas(), 120);
   });
 
   window.addEventListener('hashchange', () => {
