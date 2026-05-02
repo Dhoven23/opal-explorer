@@ -780,8 +780,13 @@ function renderGantt(canvas) {
     externalCost += externalCostFor(n);
     nonExtCount++;
   }
-  const costM = (cost + externalCost) / 1_000_000;
-  const totalsText = `≈ ${nonExtCount} modules · ${weight.toFixed(0)} dev-wk · ~$${costM.toFixed(2)}M`;
+  const devCostStr = `~$${(cost / 1_000_000).toFixed(2)}M`;
+  const extStr = externalCost > 0
+    ? (externalCost >= 1_000_000
+        ? ` + $${(externalCost / 1_000_000).toFixed(2)}M ext`
+        : ` + $${Math.round(externalCost / 1000)}K ext`)
+    : '';
+  const totalsText = `≈ ${nonExtCount} modules · ${weight.toFixed(0)} dev-wk · ${devCostStr}${extStr}`;
 
   // Critical-path summary on its own row, truncated to fit available width.
   const cpHeader = `★ Critical path: ${state.gantt.totalWeeks.toFixed(1)} wk — `;
@@ -1276,19 +1281,33 @@ function renderDrawer() {
     document.getElementById('stats-weight').textContent = weight;
     document.getElementById('stats-bucket').textContent = bucket;
 
-    // Cost rollup (naive sum + critical path / calendar burn)
+    // Cost rollup (dev cost + externals broken out + calendar burn)
     computeSchedule();
     const cpWeeks = state.gantt.totalWeeks;
     const peakTeam = peakConcurrentTeam();
-    const calendarBurn = cpWeeks * peakTeam * state.usdPerWeek + externalCost;
 
     document.getElementById('stats-devweeks').textContent =
       devWeeks ? `${devWeeks.toFixed(0)} dev-wk` : '—';
     document.getElementById('stats-naive').textContent =
-      cost ? `$${((cost + externalCost) / 1_000_000).toFixed(2)}M` : '—';
+      cost ? `$${(cost / 1_000_000).toFixed(2)}M` : '$0';
+
+    const externalRow = document.getElementById('row-external');
+    if (externalCost > 0) {
+      externalRow.hidden = false;
+      const ext = externalCost >= 1_000_000
+        ? `$${(externalCost / 1_000_000).toFixed(2)}M`
+        : `$${Math.round(externalCost / 1000)}K`;
+      document.getElementById('stats-external').textContent = ext;
+    } else {
+      externalRow.hidden = true;
+    }
+
+    // Calendar burn = labor only; externals are surfaced separately.
+    const calendarLabor = cpWeeks * peakTeam * state.usdPerWeek;
     const burnSuffix = state.aiBoost ? ` · AI ${state.aiBoostMultiplier}×` : '';
-    document.getElementById('stats-burn').textContent =
-      cpWeeks ? `~$${(calendarBurn / 1_000_000).toFixed(2)}M · ${cpWeeks.toFixed(0)}wk · peak ${peakTeam}${burnSuffix}` : '—';
+    document.getElementById('stats-burn').textContent = cpWeeks
+      ? `~$${(calendarLabor / 1_000_000).toFixed(2)}M · ${cpWeeks.toFixed(0)}wk · peak ${peakTeam}${burnSuffix}`
+      : '—';
   }
 }
 
