@@ -1,245 +1,1516 @@
 {
   "version": "0.1.0",
-  "description": "Complete feature graph for Opal — every module, integration, and capability from MVP through long-term platform vision. Used by the Opal Feature Explorer wireframe.",
-
+  "description": "Complete feature graph for Opal \u2014 every module, integration, and capability from MVP through long-term platform vision. Used by the Opal Feature Explorer wireframe.",
   "layers": [
-    { "id": "external",     "title": "External systems",       "order": 0, "color": "gray" },
-    { "id": "foundation",   "title": "Foundation",             "order": 1, "color": "amber" },
-    { "id": "capture",      "title": "Capture",                "order": 2, "color": "blue" },
-    { "id": "workflow",     "title": "Workflow",               "order": 3, "color": "purple" },
-    { "id": "conversion",   "title": "Conversion",             "order": 4, "color": "teal" },
-    { "id": "policy",       "title": "Policy & post-sale",     "order": 5, "color": "teal" },
-    { "id": "contracting",  "title": "Contracting & licensing","order": 6, "color": "coral" },
-    { "id": "reporting",    "title": "Reporting & analytics",  "order": 7, "color": "purple" },
-    { "id": "agency",       "title": "Agency / IMO",           "order": 8, "color": "pink" },
-    { "id": "network",      "title": "Network & marketplace",  "order": 9, "color": "amber" }
+    {
+      "id": "external",
+      "title": "External systems",
+      "order": 0,
+      "color": "gray"
+    },
+    {
+      "id": "foundation",
+      "title": "Foundation",
+      "order": 1,
+      "color": "amber"
+    },
+    {
+      "id": "capture",
+      "title": "Capture",
+      "order": 2,
+      "color": "blue"
+    },
+    {
+      "id": "workflow",
+      "title": "Workflow",
+      "order": 3,
+      "color": "purple"
+    },
+    {
+      "id": "conversion",
+      "title": "Conversion",
+      "order": 4,
+      "color": "teal"
+    },
+    {
+      "id": "policy",
+      "title": "Policy & post-sale",
+      "order": 5,
+      "color": "teal"
+    },
+    {
+      "id": "contracting",
+      "title": "Contracting & licensing",
+      "order": 6,
+      "color": "coral"
+    },
+    {
+      "id": "reporting",
+      "title": "Reporting & analytics",
+      "order": 7,
+      "color": "purple"
+    },
+    {
+      "id": "agency",
+      "title": "Agency / IMO",
+      "order": 8,
+      "color": "pink"
+    },
+    {
+      "id": "network",
+      "title": "Network & marketplace",
+      "order": 9,
+      "color": "amber"
+    }
   ],
-
   "nodes": [
-    { "id": "external-leads",    "title": "Lead vendors",       "subtitle": "purchased and organic sources",  "description": "External lead vendors, marketing agencies, web traffic, and organic referral sources that deliver new prospects.", "layer": "external", "category": "integration", "weight": 1, "mvpCandidate": false },
-    { "id": "external-carriers", "title": "Carrier portals",    "subtitle": "existing eApp + UW sites",        "description": "The patchwork of carrier-owned eApp portals, illustration tools, and underwriting status pages that exist today. Opal interacts with these via browser extension before any direct API exists.", "layer": "external", "category": "integration", "weight": 1, "mvpCandidate": false },
-    { "id": "external-agent",    "title": "Agent input",        "subtitle": "manual edits and data entry",     "description": "The agent typing data directly into Opal — phone calls, observations, corrections, and ad-hoc notes.", "layer": "external", "category": "ui", "weight": 1, "mvpCandidate": true },
-
-    { "id": "auth",              "title": "Auth & accounts",    "subtitle": "user identity, sessions",         "description": "User authentication, session management, password reset, MFA, and account lifecycle. Every other module assumes a logged-in identity.", "layer": "foundation", "category": "core", "weight": 2, "mvpCandidate": true },
-    { "id": "contact-model",     "title": "Contact + PII model","subtitle": "single source of truth",         "description": "Persistent contact aggregate: PII, demographics, related activities, qualifications, quotes, applications, policies, documents. The data spine of the entire platform.", "layer": "foundation", "category": "core", "weight": 3, "mvpCandidate": true },
-    { "id": "activity-log",      "title": "Activity log",       "subtitle": "events, timeline, audit",         "description": "Append-only event log for every action taken against a contact: calls, SMS, emails, notes, status changes, quotes generated, applications submitted.", "layer": "foundation", "category": "core", "weight": 2, "mvpCandidate": true },
-    { "id": "doc-store",         "title": "Document storage",   "subtitle": "files, recordings, IDs",          "description": "S3-style object storage for call recordings, signed forms, ID images, illustrations, and any other binary artifacts attached to contacts.", "layer": "foundation", "category": "core", "weight": 2, "mvpCandidate": true },
-    { "id": "audit-trail",       "title": "Audit trail",        "subtitle": "compliance and replay",           "description": "Immutable, regulator-grade trail of who did what when. Required for state and federal life/health compliance, replay-of-record requests, and dispute resolution.", "layer": "foundation", "category": "core", "weight": 3, "mvpCandidate": false },
-    { "id": "roles",             "title": "Roles & permissions","subtitle": "agent, manager, admin",           "description": "Role-based access control: producer, agency manager, IMO admin, carrier observer, customer-portal user.", "layer": "foundation", "category": "core", "weight": 2, "mvpCandidate": true },
-    { "id": "multi-tenant",      "title": "Multi-tenant",       "subtitle": "agency hierarchy and isolation",  "description": "Tenant isolation for agencies, IMOs, and downline structures. Required for any scenario where data must be scoped to an org rather than an individual.", "layer": "foundation", "category": "core", "weight": 4, "mvpCandidate": false },
-    { "id": "notifications",     "title": "Notifications",      "subtitle": "in-app, email, push, SMS",        "description": "Cross-channel notification system for tasks, alerts, status changes, and time-sensitive events.", "layer": "foundation", "category": "core", "weight": 2, "mvpCandidate": true },
-
-    { "id": "lead-intake-csv",     "title": "CSV lead import",    "subtitle": "drag, drop, dedupe",            "description": "CSV/Excel file upload with column mapping, validation, and duplicate detection against existing contacts.", "layer": "capture", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "lead-intake-form",    "title": "Embed forms",        "subtitle": "hosted intake forms",           "description": "Customizable hosted forms agents can embed in landing pages. Submissions create contacts directly.", "layer": "capture", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "lead-intake-webhook", "title": "Webhook intake",     "subtitle": "Zapier and direct POST",        "description": "Generic webhook endpoint for any lead source that can POST JSON. Foundation for vendor integrations and Zapier-style flows.", "layer": "capture", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "lead-vendor-api",     "title": "Vendor APIs",        "subtitle": "direct integrations",           "description": "First-party integrations with major lead vendors for real-time delivery, ROI tracking, and refund/return workflows.", "layer": "capture", "category": "integration", "weight": 3, "mvpCandidate": false },
-    { "id": "dialer-single",       "title": "Single-line dialer", "subtitle": "click to call, Twilio",         "description": "Outbound calling via Twilio (or similar) with click-to-call, call disposition, and caller-ID rotation.", "layer": "capture", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "dialer-power",        "title": "Power dialer",       "subtitle": "parallel and predictive",       "description": "Multi-line parallel dialer with abandonment management. Substantially harder than single-line and regulated separately.", "layer": "capture", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "sms-messaging",       "title": "SMS messaging",      "subtitle": "two-way text, templates",       "description": "Compliant two-way SMS with templates, opt-out handling, and 10DLC registration.", "layer": "capture", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "email-integration",   "title": "Email integration",  "subtitle": "Gmail, Outlook, sync",          "description": "OAuth-based bidirectional sync with Gmail and Outlook. Email threads attach to contacts automatically.", "layer": "capture", "category": "integration", "weight": 3, "mvpCandidate": false },
-    { "id": "voicemail-drop",      "title": "Voicemail drop",     "subtitle": "pre-recorded VM",               "description": "Pre-recorded voicemail injection on no-answer, with multiple recordings per agent and per campaign.", "layer": "capture", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "call-recording",      "title": "Call recording",     "subtitle": "stored, indexed, replayable",   "description": "Full call recording with two-party consent handling, storage in document layer, and per-state compliance toggles.", "layer": "capture", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "transcription-live",  "title": "AI transcription",   "subtitle": "real-time speech-to-text",      "description": "Real-time transcription of live calls with speaker diarization. Drives the AI extraction layer.", "layer": "capture", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "ai-extraction",       "title": "AI field extraction","subtitle": "transcript to PII",             "description": "LLM-powered extraction of structured fields (DOB, height/weight, medications, beneficiaries, etc.) from call transcripts and notes, written back to the contact record.", "layer": "capture", "category": "feature", "weight": 3, "mvpCandidate": true },
-
-    { "id": "pipeline-crm",        "title": "Pipeline / CRM",     "subtitle": "kanban stages and views",       "description": "Customizable pipeline stages, kanban and list views, contact filtering, bulk actions.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "today-queue",         "title": "Today queue",        "subtitle": "prioritized call list",         "description": "AI-prioritized daily call queue based on scheduled callbacks, lead freshness, and stage urgency.", "layer": "workflow", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "tasks",               "title": "Tasks & follow-ups", "subtitle": "reminders, SLAs",               "description": "Task creation, due dates, snoozing, recurring tasks, and SLA tracking against contact stages.", "layer": "workflow", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "drip-sequences",      "title": "Drip sequences",     "subtitle": "automated SMS + email",         "description": "Multi-step automated sequences mixing SMS, email, and tasks. Triggered by stage change, time delay, or custom events.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "lead-scoring",        "title": "Lead scoring",       "subtitle": "AI-assisted prioritization",    "description": "Predictive scoring of lead conversion probability based on contact attributes, source, and historical patterns.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "quoting-term",        "title": "Term life quoting",  "subtitle": "live multi-carrier compare",    "description": "Real-time term life quoting across all major carriers. Highest-volume product type for healthy applicants.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "quoting-fe",          "title": "Final expense",      "subtitle": "FE / GI quoting",               "description": "Final expense and guaranteed-issue quoting. Different rate structure and underwriting from term life.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "quoting-iul",         "title": "IUL / WL quoting",   "subtitle": "cash-value products",           "description": "Indexed universal life and whole life quoting. Requires illustration generation for compliant presentation.", "layer": "workflow", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "quoting-medicare",    "title": "Medicare quoting",   "subtitle": "MAPD, MS, PDP",                 "description": "Medicare Advantage, Medicare Supplement, and Part D quoting. Plan-year-bound and integrated with CMS data.", "layer": "workflow", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "quoting-aca",         "title": "ACA quoting",        "subtitle": "marketplace plans",             "description": "ACA marketplace plan quoting with subsidy calculation. Requires HealthSherpa or similar integration.", "layer": "workflow", "category": "integration", "weight": 4, "mvpCandidate": false },
-    { "id": "quote-comparison",    "title": "Quote comparison",   "subtitle": "side-by-side, save, share",     "description": "Unified comparison view across all quoted products with save, share, and present-on-call modes.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "illustration-gen",    "title": "Illustrations",      "subtitle": "compliant cash-value illos",    "description": "Carrier-compliant illustration generation for cash-value products. Required for sale of IUL/WL.", "layer": "workflow", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "uw-cheat-sheet",      "title": "UW cheat sheet",     "subtitle": "rules engine, build chart",     "description": "Curated underwriting reference: build chart, common conditions, foreign travel rules, occupation/avocation. The 90-percent solution.", "layer": "workflow", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "rx-prequal",          "title": "Rx pre-qual",        "subtitle": "AI prescription matching",      "description": "AI-driven prescription history pre-qualifier (BPP-style) that predicts carrier acceptance from medication patterns. The long-term moat.", "layer": "workflow", "category": "feature", "weight": 4, "mvpCandidate": true },
-
-    { "id": "eapp-extension",      "title": "eApp autofill ext",  "subtitle": "browser extension",             "description": "Chrome/Edge browser extension that recognizes carrier eApp portal fields and autofills from the contact record. The cheat code that gives day-one carrier coverage with zero carrier cooperation.", "layer": "conversion", "category": "feature", "weight": 4, "mvpCandidate": true },
-    { "id": "eapp-native",         "title": "Native eApp",        "subtitle": "API-direct submission",         "description": "Direct API submission to carriers that expose eApp APIs. Replaces extension where available. Requires carrier-by-carrier integration.", "layer": "conversion", "category": "integration", "weight": 5, "mvpCandidate": false },
-    { "id": "eapp-middleware",     "title": "Middleware handoff", "subtitle": "iPipeline, Firelight",          "description": "Integration with eApp middleware aggregators (iPipeline, Firelight) as a fallback for carriers reachable that way.", "layer": "conversion", "category": "integration", "weight": 4, "mvpCandidate": false },
-    { "id": "esign",               "title": "e-Signature",        "subtitle": "DocuSign, Adobe, native",       "description": "e-Signature flow for application forms, replacement notices, HIPAA authorizations.", "layer": "conversion", "category": "integration", "weight": 3, "mvpCandidate": true },
-    { "id": "doc-collection",      "title": "Doc collection",     "subtitle": "IDs, photos, uploads",          "description": "Mobile-friendly document upload flows for IDs, void checks, and supplementary forms. Customer can complete from a text link.", "layer": "conversion", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "voice-sig",           "title": "Voice signature",    "subtitle": "FE phone-sale signatures",      "description": "Voice-recorded signature capture for telephonic final-expense sales where eSignature isn't feasible.", "layer": "conversion", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "submission-tracker",  "title": "Submission tracker", "subtitle": "what was sent where",           "description": "Tracks every application submitted, to which carrier, with what status, including extension-submitted apps.", "layer": "conversion", "category": "feature", "weight": 2, "mvpCandidate": true },
-    { "id": "requirements-dash",   "title": "Outstanding reqs",   "subtitle": "what each app needs next",      "description": "Dashboard of every pending requirement across every open application: APS, exam, payment, sig, etc.", "layer": "conversion", "category": "feature", "weight": 3, "mvpCandidate": false },
-
-    { "id": "policy-status",       "title": "Policy status",      "subtitle": "issued, in force, lapsed",      "description": "Status feed for in-force policies. Sourced from carrier portals via extension scraping initially, native APIs later.", "layer": "policy", "category": "feature", "weight": 3, "mvpCandidate": true },
-    { "id": "commission-ingest",   "title": "Commission ingest",  "subtitle": "PDF and CSV statements",        "description": "Ingest commission statements from carriers in PDF/CSV format and reconcile to policies.", "layer": "policy", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "commission-recon",    "title": "Commission recon",   "subtitle": "expected vs paid",              "description": "Reconciliation engine that flags chargebacks, missing payments, and rate-mismatch errors against expected commissions.", "layer": "policy", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "persistency",         "title": "Persistency",        "subtitle": "policy survival tracking",      "description": "Cohort-based persistency reporting: 13-month, 25-month, by carrier, by product, by lead source.", "layer": "policy", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "cross-sell",          "title": "Cross-sell triggers","subtitle": "renewal and life events",       "description": "Automated triggers for cross-sell opportunities based on policy events, renewals, and life-event signals.", "layer": "policy", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "customer-portal",     "title": "Customer portal",    "subtitle": "white-label client view",       "description": "Client-facing portal where the policyholder can view active policies, request changes, and message their agent.", "layer": "policy", "category": "feature", "weight": 4, "mvpCandidate": false },
-
-    { "id": "appointments",        "title": "Appointments",       "subtitle": "carrier appointment status",    "description": "Tracks carrier appointment status per agent: which carriers, ready-to-sell dates, JIT vs full appointment.", "layer": "contracting", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "license-tracking",    "title": "License tracking",   "subtitle": "state licenses, renewals",      "description": "State life/health license tracking with renewal alerts and document storage.", "layer": "contracting", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "ce-tracking",         "title": "CE & E&O",           "subtitle": "continuing ed, E&O",            "description": "Continuing education credits and Errors & Omissions insurance tracking with expiration alerts.", "layer": "contracting", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "surelc-replacement",  "title": "Contracting flow",   "subtitle": "SureLC replacement",            "description": "Native carrier-contracting workflow. Phase-3 wedge into IMOs since contracting today flows through SureLC and similar.", "layer": "contracting", "category": "feature", "weight": 5, "mvpCandidate": false },
-
-    { "id": "agent-dashboard",     "title": "Agent dashboard",    "subtitle": "personal production view",      "description": "Daily/weekly/monthly production dashboard: calls, contacts, quotes, apps submitted, apps issued, commission.", "layer": "reporting", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "funnel-analytics",    "title": "Funnel analytics",   "subtitle": "stage conversion",              "description": "Conversion analytics across pipeline stages, identifying drop-off points and time-in-stage outliers.", "layer": "reporting", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "lead-roi",            "title": "Lead ROI",           "subtitle": "source, cost, conversion",      "description": "ROI by lead source: cost per lead, conversion rate, average premium, payback period, persistency.", "layer": "reporting", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "call-analytics",      "title": "Call analytics",     "subtitle": "talk time, dispositions",       "description": "Call performance analytics: talk time, contact rate, conversion by hour/day/state.", "layer": "reporting", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "carrier-conversion",  "title": "Carrier conversion", "subtitle": "by carrier and product",        "description": "Conversion rate, average premium, and decline rate by carrier and by product class.", "layer": "reporting", "category": "feature", "weight": 2, "mvpCandidate": false },
-    { "id": "anon-benchmarks",     "title": "Anon benchmarks",    "subtitle": "industry comparison",           "description": "Anonymized comparison of agent metrics against the broader Opal user base. Network-effect feature.", "layer": "reporting", "category": "feature", "weight": 4, "mvpCandidate": false },
-
-    { "id": "team-visibility",     "title": "Team visibility",    "subtitle": "downline production",           "description": "Manager and IMO views into downline production, pipeline, and call activity.", "layer": "agency", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "override-tracking",   "title": "Override tracking",  "subtitle": "splits and overrides",          "description": "Hierarchical override and split-commission calculation across agency tiers.", "layer": "agency", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "recruiting",          "title": "Agent recruiting",   "subtitle": "hire pipeline",                 "description": "Recruiting funnel for adding agents to an IMO or agency: outreach, contracting, ramp tracking.", "layer": "agency", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "training",            "title": "Training",           "subtitle": "modules and certs",             "description": "In-platform training modules, role-plays, certification tracking for new and existing agents.", "layer": "agency", "category": "feature", "weight": 3, "mvpCandidate": false },
-    { "id": "white-label",         "title": "Agency branding",    "subtitle": "white-label and custom domain", "description": "White-label theming and custom-domain support for agencies that want Opal-branded-as-them.", "layer": "agency", "category": "feature", "weight": 3, "mvpCandidate": false },
-
-    { "id": "lead-exchange",       "title": "Lead exchange",      "subtitle": "shared marketplace",            "description": "Two-sided lead marketplace where vendors list inventory and producers buy with full ROI transparency. Endgame ARR pillar.", "layer": "network", "category": "feature", "weight": 5, "mvpCandidate": false },
-    { "id": "carrier-api-spec",    "title": "Carrier API standard","subtitle": "open submission spec",         "description": "Open specification for eApp/UW/contracting APIs that carriers adopt as a result of producer-side leverage. The reason every prior attempt failed and Opal's largest long-term moat.", "layer": "network", "category": "feature", "weight": 5, "mvpCandidate": false },
-    { "id": "producer-directory",  "title": "Producer directory", "subtitle": "verified, neutral",             "description": "Verified producer directory: licenses, appointments, persistency, ratings. Powers IMO recruiting and consumer-facing referrals.", "layer": "network", "category": "feature", "weight": 4, "mvpCandidate": false },
-    { "id": "industry-data",       "title": "Industry data",      "subtitle": "anonymized data products",      "description": "Productized anonymized data feeds for carriers, IMOs, and reinsurers: real submission patterns, competitive win/loss, market shift signals.", "layer": "network", "category": "feature", "weight": 5, "mvpCandidate": false }
+    {
+      "id": "external-leads",
+      "title": "Lead vendors",
+      "subtitle": "purchased and organic sources",
+      "description": "External lead vendors, marketing agencies, web traffic, and organic referral sources that deliver new prospects.",
+      "layer": "external",
+      "category": "integration",
+      "weight": 1,
+      "mvpCandidate": false
+    },
+    {
+      "id": "external-carriers",
+      "title": "Carrier portals",
+      "subtitle": "existing eApp + UW sites",
+      "description": "The patchwork of carrier-owned eApp portals, illustration tools, and underwriting status pages that exist today. Opal interacts with these via browser extension before any direct API exists.",
+      "layer": "external",
+      "category": "integration",
+      "weight": 1,
+      "mvpCandidate": false
+    },
+    {
+      "id": "external-agent",
+      "title": "Agent input",
+      "subtitle": "manual edits and data entry",
+      "description": "The agent typing data directly into Opal \u2014 phone calls, observations, corrections, and ad-hoc notes.",
+      "layer": "external",
+      "category": "ui",
+      "weight": 1,
+      "mvpCandidate": true
+    },
+    {
+      "id": "auth",
+      "title": "Auth & accounts",
+      "subtitle": "user identity, sessions",
+      "description": "User authentication, session management, password reset, MFA, and account lifecycle. Every other module assumes a logged-in identity.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "contact-model",
+      "title": "Contact + PII model",
+      "subtitle": "single source of truth",
+      "description": "Persistent contact aggregate: PII, demographics, related activities, qualifications, quotes, applications, policies, documents. The data spine of the entire platform.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "activity-log",
+      "title": "Activity log",
+      "subtitle": "events, timeline, audit",
+      "description": "Append-only event log for every action taken against a contact: calls, SMS, emails, notes, status changes, quotes generated, applications submitted.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "doc-store",
+      "title": "Document storage",
+      "subtitle": "files, recordings, IDs",
+      "description": "S3-style object storage for call recordings, signed forms, ID images, illustrations, and any other binary artifacts attached to contacts.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "audit-trail",
+      "title": "Audit trail",
+      "subtitle": "compliance and replay",
+      "description": "Immutable, regulator-grade trail of who did what when. Required for state and federal life/health compliance, replay-of-record requests, and dispute resolution.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "roles",
+      "title": "Roles & permissions",
+      "subtitle": "agent, manager, admin",
+      "description": "Role-based access control: producer, agency manager, IMO admin, carrier observer, customer-portal user.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "multi-tenant",
+      "title": "Multi-tenant",
+      "subtitle": "agency hierarchy and isolation",
+      "description": "Tenant isolation for agencies, IMOs, and downline structures. Required for any scenario where data must be scoped to an org rather than an individual.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "notifications",
+      "title": "Notifications",
+      "subtitle": "in-app, email, push, SMS",
+      "description": "Cross-channel notification system for tasks, alerts, status changes, and time-sensitive events.",
+      "layer": "foundation",
+      "category": "core",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "lead-intake-csv",
+      "title": "CSV lead import",
+      "subtitle": "drag, drop, dedupe",
+      "description": "CSV/Excel file upload with column mapping, validation, and duplicate detection against existing contacts.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "lead-intake-form",
+      "title": "Embed forms",
+      "subtitle": "hosted intake forms",
+      "description": "Customizable hosted forms agents can embed in landing pages. Submissions create contacts directly.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "lead-intake-webhook",
+      "title": "Webhook intake",
+      "subtitle": "Zapier and direct POST",
+      "description": "Generic webhook endpoint for any lead source that can POST JSON. Foundation for vendor integrations and Zapier-style flows.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "lead-vendor-api",
+      "title": "Vendor APIs",
+      "subtitle": "direct integrations",
+      "description": "First-party integrations with major lead vendors for real-time delivery, ROI tracking, and refund/return workflows.",
+      "layer": "capture",
+      "category": "integration",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "dialer-single",
+      "title": "Single-line dialer",
+      "subtitle": "click to call, Twilio",
+      "description": "Outbound calling via Twilio (or similar) with click-to-call, call disposition, and caller-ID rotation.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "dialer-power",
+      "title": "Power dialer",
+      "subtitle": "parallel and predictive",
+      "description": "Multi-line parallel dialer with abandonment management. Substantially harder than single-line and regulated separately.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "sms-messaging",
+      "title": "SMS messaging",
+      "subtitle": "two-way text, templates",
+      "description": "Compliant two-way SMS with templates, opt-out handling, and 10DLC registration.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "email-integration",
+      "title": "Email integration",
+      "subtitle": "Gmail, Outlook, sync",
+      "description": "OAuth-based bidirectional sync with Gmail and Outlook. Email threads attach to contacts automatically.",
+      "layer": "capture",
+      "category": "integration",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "voicemail-drop",
+      "title": "Voicemail drop",
+      "subtitle": "pre-recorded VM",
+      "description": "Pre-recorded voicemail injection on no-answer, with multiple recordings per agent and per campaign.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "call-recording",
+      "title": "Call recording",
+      "subtitle": "stored, indexed, replayable",
+      "description": "Full call recording with two-party consent handling, storage in document layer, and per-state compliance toggles.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "transcription-live",
+      "title": "AI transcription",
+      "subtitle": "real-time speech-to-text",
+      "description": "Real-time transcription of live calls with speaker diarization. Drives the AI extraction layer.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "ai-extraction",
+      "title": "AI field extraction",
+      "subtitle": "transcript to PII",
+      "description": "LLM-powered extraction of structured fields (DOB, height/weight, medications, beneficiaries, etc.) from call transcripts and notes, written back to the contact record.",
+      "layer": "capture",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "pipeline-crm",
+      "title": "Pipeline / CRM",
+      "subtitle": "kanban stages and views",
+      "description": "Customizable pipeline stages, kanban and list views, contact filtering, bulk actions.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "today-queue",
+      "title": "Today queue",
+      "subtitle": "prioritized call list",
+      "description": "AI-prioritized daily call queue based on scheduled callbacks, lead freshness, and stage urgency.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "tasks",
+      "title": "Tasks & follow-ups",
+      "subtitle": "reminders, SLAs",
+      "description": "Task creation, due dates, snoozing, recurring tasks, and SLA tracking against contact stages.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "drip-sequences",
+      "title": "Drip sequences",
+      "subtitle": "automated SMS + email",
+      "description": "Multi-step automated sequences mixing SMS, email, and tasks. Triggered by stage change, time delay, or custom events.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "lead-scoring",
+      "title": "Lead scoring",
+      "subtitle": "AI-assisted prioritization",
+      "description": "Predictive scoring of lead conversion probability based on contact attributes, source, and historical patterns.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "quoting-term",
+      "title": "Term life quoting",
+      "subtitle": "live multi-carrier compare",
+      "description": "Real-time term life quoting across all major carriers. Highest-volume product type for healthy applicants.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "quoting-fe",
+      "title": "Final expense",
+      "subtitle": "FE / GI quoting",
+      "description": "Final expense and guaranteed-issue quoting. Different rate structure and underwriting from term life.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "quoting-iul",
+      "title": "IUL / WL quoting",
+      "subtitle": "cash-value products",
+      "description": "Indexed universal life and whole life quoting. Requires illustration generation for compliant presentation.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "quoting-medicare",
+      "title": "Medicare quoting",
+      "subtitle": "MAPD, MS, PDP",
+      "description": "Medicare Advantage, Medicare Supplement, and Part D quoting. Plan-year-bound and integrated with CMS data.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "quoting-aca",
+      "title": "ACA quoting",
+      "subtitle": "marketplace plans",
+      "description": "ACA marketplace plan quoting with subsidy calculation. Requires HealthSherpa or similar integration.",
+      "layer": "workflow",
+      "category": "integration",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "quote-comparison",
+      "title": "Quote comparison",
+      "subtitle": "side-by-side, save, share",
+      "description": "Unified comparison view across all quoted products with save, share, and present-on-call modes.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "illustration-gen",
+      "title": "Illustrations",
+      "subtitle": "compliant cash-value illos",
+      "description": "Carrier-compliant illustration generation for cash-value products. Required for sale of IUL/WL.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "uw-cheat-sheet",
+      "title": "UW cheat sheet",
+      "subtitle": "rules engine, build chart",
+      "description": "Curated underwriting reference: build chart, common conditions, foreign travel rules, occupation/avocation. The 90-percent solution.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "rx-prequal",
+      "title": "Rx pre-qual",
+      "subtitle": "AI prescription matching",
+      "description": "AI-driven prescription history pre-qualifier (BPP-style) that predicts carrier acceptance from medication patterns. The long-term moat.",
+      "layer": "workflow",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": true
+    },
+    {
+      "id": "eapp-extension",
+      "title": "eApp autofill ext",
+      "subtitle": "browser extension",
+      "description": "Chrome/Edge browser extension that recognizes carrier eApp portal fields and autofills from the contact record. The cheat code that gives day-one carrier coverage with zero carrier cooperation.",
+      "layer": "conversion",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": true
+    },
+    {
+      "id": "eapp-native",
+      "title": "Native eApp",
+      "subtitle": "API-direct submission",
+      "description": "Direct API submission to carriers that expose eApp APIs. Replaces extension where available. Requires carrier-by-carrier integration.",
+      "layer": "conversion",
+      "category": "integration",
+      "weight": 5,
+      "mvpCandidate": false
+    },
+    {
+      "id": "eapp-middleware",
+      "title": "Middleware handoff",
+      "subtitle": "iPipeline, Firelight",
+      "description": "Integration with eApp middleware aggregators (iPipeline, Firelight) as a fallback for carriers reachable that way.",
+      "layer": "conversion",
+      "category": "integration",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "esign",
+      "title": "e-Signature",
+      "subtitle": "DocuSign, Adobe, native",
+      "description": "e-Signature flow for application forms, replacement notices, HIPAA authorizations.",
+      "layer": "conversion",
+      "category": "integration",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "doc-collection",
+      "title": "Doc collection",
+      "subtitle": "IDs, photos, uploads",
+      "description": "Mobile-friendly document upload flows for IDs, void checks, and supplementary forms. Customer can complete from a text link.",
+      "layer": "conversion",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "voice-sig",
+      "title": "Voice signature",
+      "subtitle": "FE phone-sale signatures",
+      "description": "Voice-recorded signature capture for telephonic final-expense sales where eSignature isn't feasible.",
+      "layer": "conversion",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "submission-tracker",
+      "title": "Submission tracker",
+      "subtitle": "what was sent where",
+      "description": "Tracks every application submitted, to which carrier, with what status, including extension-submitted apps.",
+      "layer": "conversion",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": true
+    },
+    {
+      "id": "requirements-dash",
+      "title": "Outstanding reqs",
+      "subtitle": "what each app needs next",
+      "description": "Dashboard of every pending requirement across every open application: APS, exam, payment, sig, etc.",
+      "layer": "conversion",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "policy-status",
+      "title": "Policy status",
+      "subtitle": "issued, in force, lapsed",
+      "description": "Status feed for in-force policies. Sourced from carrier portals via extension scraping initially, native APIs later.",
+      "layer": "policy",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": true
+    },
+    {
+      "id": "commission-ingest",
+      "title": "Commission ingest",
+      "subtitle": "PDF and CSV statements",
+      "description": "Ingest commission statements from carriers in PDF/CSV format and reconcile to policies.",
+      "layer": "policy",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "commission-recon",
+      "title": "Commission recon",
+      "subtitle": "expected vs paid",
+      "description": "Reconciliation engine that flags chargebacks, missing payments, and rate-mismatch errors against expected commissions.",
+      "layer": "policy",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "persistency",
+      "title": "Persistency",
+      "subtitle": "policy survival tracking",
+      "description": "Cohort-based persistency reporting: 13-month, 25-month, by carrier, by product, by lead source.",
+      "layer": "policy",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "cross-sell",
+      "title": "Cross-sell triggers",
+      "subtitle": "renewal and life events",
+      "description": "Automated triggers for cross-sell opportunities based on policy events, renewals, and life-event signals.",
+      "layer": "policy",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "customer-portal",
+      "title": "Customer portal",
+      "subtitle": "white-label client view",
+      "description": "Client-facing portal where the policyholder can view active policies, request changes, and message their agent.",
+      "layer": "policy",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "appointments",
+      "title": "Appointments",
+      "subtitle": "carrier appointment status",
+      "description": "Tracks carrier appointment status per agent: which carriers, ready-to-sell dates, JIT vs full appointment.",
+      "layer": "contracting",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "license-tracking",
+      "title": "License tracking",
+      "subtitle": "state licenses, renewals",
+      "description": "State life/health license tracking with renewal alerts and document storage.",
+      "layer": "contracting",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "ce-tracking",
+      "title": "CE & E&O",
+      "subtitle": "continuing ed, E&O",
+      "description": "Continuing education credits and Errors & Omissions insurance tracking with expiration alerts.",
+      "layer": "contracting",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "surelc-replacement",
+      "title": "Contracting flow",
+      "subtitle": "SureLC replacement",
+      "description": "Native carrier-contracting workflow. Phase-3 wedge into IMOs since contracting today flows through SureLC and similar.",
+      "layer": "contracting",
+      "category": "feature",
+      "weight": 5,
+      "mvpCandidate": false
+    },
+    {
+      "id": "agent-dashboard",
+      "title": "Agent dashboard",
+      "subtitle": "personal production view",
+      "description": "Daily/weekly/monthly production dashboard: calls, contacts, quotes, apps submitted, apps issued, commission.",
+      "layer": "reporting",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "funnel-analytics",
+      "title": "Funnel analytics",
+      "subtitle": "stage conversion",
+      "description": "Conversion analytics across pipeline stages, identifying drop-off points and time-in-stage outliers.",
+      "layer": "reporting",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "lead-roi",
+      "title": "Lead ROI",
+      "subtitle": "source, cost, conversion",
+      "description": "ROI by lead source: cost per lead, conversion rate, average premium, payback period, persistency.",
+      "layer": "reporting",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "call-analytics",
+      "title": "Call analytics",
+      "subtitle": "talk time, dispositions",
+      "description": "Call performance analytics: talk time, contact rate, conversion by hour/day/state.",
+      "layer": "reporting",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "carrier-conversion",
+      "title": "Carrier conversion",
+      "subtitle": "by carrier and product",
+      "description": "Conversion rate, average premium, and decline rate by carrier and by product class.",
+      "layer": "reporting",
+      "category": "feature",
+      "weight": 2,
+      "mvpCandidate": false
+    },
+    {
+      "id": "anon-benchmarks",
+      "title": "Anon benchmarks",
+      "subtitle": "industry comparison",
+      "description": "Anonymized comparison of agent metrics against the broader Opal user base. Network-effect feature.",
+      "layer": "reporting",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "team-visibility",
+      "title": "Team visibility",
+      "subtitle": "downline production",
+      "description": "Manager and IMO views into downline production, pipeline, and call activity.",
+      "layer": "agency",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "override-tracking",
+      "title": "Override tracking",
+      "subtitle": "splits and overrides",
+      "description": "Hierarchical override and split-commission calculation across agency tiers.",
+      "layer": "agency",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "recruiting",
+      "title": "Agent recruiting",
+      "subtitle": "hire pipeline",
+      "description": "Recruiting funnel for adding agents to an IMO or agency: outreach, contracting, ramp tracking.",
+      "layer": "agency",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "training",
+      "title": "Training",
+      "subtitle": "modules and certs",
+      "description": "In-platform training modules, role-plays, certification tracking for new and existing agents.",
+      "layer": "agency",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "white-label",
+      "title": "Agency branding",
+      "subtitle": "white-label and custom domain",
+      "description": "White-label theming and custom-domain support for agencies that want Opal-branded-as-them.",
+      "layer": "agency",
+      "category": "feature",
+      "weight": 3,
+      "mvpCandidate": false
+    },
+    {
+      "id": "lead-exchange",
+      "title": "Lead exchange",
+      "subtitle": "shared marketplace",
+      "description": "Two-sided lead marketplace where vendors list inventory and producers buy with full ROI transparency. Endgame ARR pillar.",
+      "layer": "network",
+      "category": "feature",
+      "weight": 5,
+      "mvpCandidate": false
+    },
+    {
+      "id": "carrier-end-to-end",
+      "title": "Carrier end-to-end",
+      "subtitle": "full bidirectional integration",
+      "description": "Full integration with a single carrier covering eApp submission, underwriting status, policy issuance, commission feeds, and contracting. Tier-4 carrier integration; the proof point that feeds the open API standard.",
+      "layer": "network",
+      "category": "feature",
+      "weight": 5,
+      "mvpCandidate": false
+    },
+    {
+      "id": "carrier-api-spec",
+      "title": "Carrier API standard",
+      "subtitle": "open submission spec",
+      "description": "Open specification for eApp/UW/contracting APIs that carriers adopt as a result of producer-side leverage. The reason every prior attempt failed and Opal's largest long-term moat.",
+      "layer": "network",
+      "category": "feature",
+      "weight": 5,
+      "mvpCandidate": false
+    },
+    {
+      "id": "producer-directory",
+      "title": "Producer directory",
+      "subtitle": "verified, neutral",
+      "description": "Verified producer directory: licenses, appointments, persistency, ratings. Powers IMO recruiting and consumer-facing referrals.",
+      "layer": "network",
+      "category": "feature",
+      "weight": 4,
+      "mvpCandidate": false
+    },
+    {
+      "id": "industry-data",
+      "title": "Industry data",
+      "subtitle": "anonymized data products",
+      "description": "Productized anonymized data feeds for carriers, IMOs, and reinsurers: real submission patterns, competitive win/loss, market shift signals.",
+      "layer": "network",
+      "category": "feature",
+      "weight": 5,
+      "mvpCandidate": false
+    }
   ],
-
   "edges": [
-    { "from": "contact-model", "to": "auth", "type": "hard" },
-    { "from": "activity-log", "to": "auth", "type": "hard" },
-    { "from": "doc-store", "to": "auth", "type": "hard" },
-    { "from": "audit-trail", "to": "activity-log", "type": "hard" },
-    { "from": "audit-trail", "to": "doc-store", "type": "hard" },
-    { "from": "roles", "to": "auth", "type": "hard" },
-    { "from": "multi-tenant", "to": "auth", "type": "hard" },
-    { "from": "multi-tenant", "to": "roles", "type": "hard" },
-    { "from": "notifications", "to": "auth", "type": "hard" },
-    { "from": "notifications", "to": "contact-model", "type": "soft" },
-
-    { "from": "lead-intake-csv", "to": "contact-model", "type": "hard" },
-    { "from": "lead-intake-form", "to": "contact-model", "type": "hard" },
-    { "from": "lead-intake-webhook", "to": "contact-model", "type": "hard" },
-    { "from": "lead-vendor-api", "to": "lead-intake-webhook", "type": "hard" },
-    { "from": "lead-vendor-api", "to": "external-leads", "type": "hard" },
-    { "from": "dialer-single", "to": "contact-model", "type": "hard" },
-    { "from": "dialer-single", "to": "activity-log", "type": "hard" },
-    { "from": "dialer-power", "to": "dialer-single", "type": "hard" },
-    { "from": "sms-messaging", "to": "contact-model", "type": "hard" },
-    { "from": "sms-messaging", "to": "activity-log", "type": "hard" },
-    { "from": "email-integration", "to": "contact-model", "type": "hard" },
-    { "from": "email-integration", "to": "activity-log", "type": "hard" },
-    { "from": "voicemail-drop", "to": "dialer-single", "type": "hard" },
-    { "from": "voicemail-drop", "to": "doc-store", "type": "hard" },
-    { "from": "call-recording", "to": "dialer-single", "type": "hard" },
-    { "from": "call-recording", "to": "doc-store", "type": "hard" },
-    { "from": "transcription-live", "to": "call-recording", "type": "hard" },
-    { "from": "ai-extraction", "to": "transcription-live", "type": "hard" },
-    { "from": "ai-extraction", "to": "contact-model", "type": "hard" },
-
-    { "from": "pipeline-crm", "to": "contact-model", "type": "hard" },
-    { "from": "pipeline-crm", "to": "activity-log", "type": "hard" },
-    { "from": "today-queue", "to": "pipeline-crm", "type": "hard" },
-    { "from": "today-queue", "to": "tasks", "type": "soft" },
-    { "from": "tasks", "to": "contact-model", "type": "hard" },
-    { "from": "tasks", "to": "notifications", "type": "hard" },
-    { "from": "drip-sequences", "to": "tasks", "type": "hard" },
-    { "from": "drip-sequences", "to": "sms-messaging", "type": "soft" },
-    { "from": "drip-sequences", "to": "email-integration", "type": "soft" },
-    { "from": "lead-scoring", "to": "contact-model", "type": "hard" },
-    { "from": "lead-scoring", "to": "activity-log", "type": "hard" },
-    { "from": "lead-scoring", "to": "ai-extraction", "type": "soft" },
-    { "from": "quoting-term", "to": "contact-model", "type": "hard" },
-    { "from": "quoting-fe", "to": "contact-model", "type": "hard" },
-    { "from": "quoting-iul", "to": "contact-model", "type": "hard" },
-    { "from": "quoting-iul", "to": "illustration-gen", "type": "hard" },
-    { "from": "quoting-medicare", "to": "contact-model", "type": "hard" },
-    { "from": "quoting-aca", "to": "contact-model", "type": "hard" },
-    { "from": "quote-comparison", "to": "contact-model", "type": "hard" },
-    { "from": "quote-comparison", "to": "quoting-term", "type": "soft" },
-    { "from": "quote-comparison", "to": "quoting-fe", "type": "soft" },
-    { "from": "illustration-gen", "to": "doc-store", "type": "hard" },
-    { "from": "illustration-gen", "to": "contact-model", "type": "hard" },
-    { "from": "uw-cheat-sheet", "to": "contact-model", "type": "soft" },
-    { "from": "rx-prequal", "to": "contact-model", "type": "hard" },
-    { "from": "rx-prequal", "to": "ai-extraction", "type": "soft" },
-
-    { "from": "eapp-extension", "to": "contact-model", "type": "hard" },
-    { "from": "eapp-extension", "to": "external-carriers", "type": "hard" },
-    { "from": "eapp-extension", "to": "quote-comparison", "type": "soft" },
-    { "from": "eapp-extension", "to": "uw-cheat-sheet", "type": "soft" },
-    { "from": "eapp-native", "to": "contact-model", "type": "hard" },
-    { "from": "eapp-native", "to": "submission-tracker", "type": "hard" },
-    { "from": "eapp-middleware", "to": "contact-model", "type": "hard" },
-    { "from": "eapp-middleware", "to": "submission-tracker", "type": "hard" },
-    { "from": "esign", "to": "doc-store", "type": "hard" },
-    { "from": "esign", "to": "contact-model", "type": "hard" },
-    { "from": "doc-collection", "to": "doc-store", "type": "hard" },
-    { "from": "doc-collection", "to": "contact-model", "type": "hard" },
-    { "from": "doc-collection", "to": "sms-messaging", "type": "soft" },
-    { "from": "voice-sig", "to": "call-recording", "type": "hard" },
-    { "from": "voice-sig", "to": "esign", "type": "soft" },
-    { "from": "submission-tracker", "to": "contact-model", "type": "hard" },
-    { "from": "submission-tracker", "to": "activity-log", "type": "hard" },
-    { "from": "submission-tracker", "to": "eapp-extension", "type": "soft" },
-    { "from": "requirements-dash", "to": "submission-tracker", "type": "hard" },
-    { "from": "requirements-dash", "to": "notifications", "type": "soft" },
-
-    { "from": "policy-status", "to": "submission-tracker", "type": "hard" },
-    { "from": "policy-status", "to": "external-carriers", "type": "hard" },
-    { "from": "commission-ingest", "to": "doc-store", "type": "hard" },
-    { "from": "commission-ingest", "to": "policy-status", "type": "soft" },
-    { "from": "commission-recon", "to": "commission-ingest", "type": "hard" },
-    { "from": "commission-recon", "to": "policy-status", "type": "hard" },
-    { "from": "persistency", "to": "policy-status", "type": "hard" },
-    { "from": "cross-sell", "to": "policy-status", "type": "hard" },
-    { "from": "cross-sell", "to": "contact-model", "type": "hard" },
-    { "from": "cross-sell", "to": "drip-sequences", "type": "soft" },
-    { "from": "customer-portal", "to": "contact-model", "type": "hard" },
-    { "from": "customer-portal", "to": "policy-status", "type": "hard" },
-    { "from": "customer-portal", "to": "doc-store", "type": "hard" },
-    { "from": "customer-portal", "to": "auth", "type": "hard" },
-
-    { "from": "appointments", "to": "contact-model", "type": "hard" },
-    { "from": "appointments", "to": "doc-store", "type": "hard" },
-    { "from": "license-tracking", "to": "contact-model", "type": "hard" },
-    { "from": "license-tracking", "to": "notifications", "type": "soft" },
-    { "from": "ce-tracking", "to": "license-tracking", "type": "hard" },
-    { "from": "ce-tracking", "to": "doc-store", "type": "hard" },
-    { "from": "surelc-replacement", "to": "appointments", "type": "hard" },
-    { "from": "surelc-replacement", "to": "license-tracking", "type": "hard" },
-    { "from": "surelc-replacement", "to": "esign", "type": "hard" },
-
-    { "from": "agent-dashboard", "to": "activity-log", "type": "hard" },
-    { "from": "agent-dashboard", "to": "pipeline-crm", "type": "soft" },
-    { "from": "funnel-analytics", "to": "pipeline-crm", "type": "hard" },
-    { "from": "funnel-analytics", "to": "activity-log", "type": "hard" },
-    { "from": "lead-roi", "to": "lead-intake-csv", "type": "soft" },
-    { "from": "lead-roi", "to": "policy-status", "type": "hard" },
-    { "from": "call-analytics", "to": "dialer-single", "type": "hard" },
-    { "from": "call-analytics", "to": "activity-log", "type": "hard" },
-    { "from": "carrier-conversion", "to": "quote-comparison", "type": "hard" },
-    { "from": "carrier-conversion", "to": "policy-status", "type": "hard" },
-    { "from": "anon-benchmarks", "to": "multi-tenant", "type": "hard" },
-    { "from": "anon-benchmarks", "to": "agent-dashboard", "type": "hard" },
-
-    { "from": "team-visibility", "to": "multi-tenant", "type": "hard" },
-    { "from": "team-visibility", "to": "agent-dashboard", "type": "hard" },
-    { "from": "override-tracking", "to": "multi-tenant", "type": "hard" },
-    { "from": "override-tracking", "to": "commission-ingest", "type": "hard" },
-    { "from": "recruiting", "to": "multi-tenant", "type": "hard" },
-    { "from": "recruiting", "to": "appointments", "type": "soft" },
-    { "from": "training", "to": "multi-tenant", "type": "hard" },
-    { "from": "training", "to": "doc-store", "type": "hard" },
-    { "from": "white-label", "to": "multi-tenant", "type": "hard" },
-
-    { "from": "lead-exchange", "to": "multi-tenant", "type": "hard" },
-    { "from": "lead-exchange", "to": "lead-intake-webhook", "type": "hard" },
-    { "from": "lead-exchange", "to": "lead-roi", "type": "soft" },
-    { "from": "lead-exchange", "to": "producer-directory", "type": "soft" },
-    { "from": "carrier-api-spec", "to": "eapp-extension", "type": "hard" },
-    { "from": "carrier-api-spec", "to": "submission-tracker", "type": "hard" },
-    { "from": "carrier-api-spec", "to": "carrier-conversion", "type": "soft" },
-    { "from": "producer-directory", "to": "auth", "type": "hard" },
-    { "from": "producer-directory", "to": "license-tracking", "type": "soft" },
-    { "from": "producer-directory", "to": "appointments", "type": "soft" },
-    { "from": "industry-data", "to": "anon-benchmarks", "type": "hard" },
-    { "from": "industry-data", "to": "carrier-conversion", "type": "soft" },
-    { "from": "industry-data", "to": "multi-tenant", "type": "hard" }
+    {
+      "from": "contact-model",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "activity-log",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "doc-store",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "audit-trail",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "audit-trail",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "roles",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "multi-tenant",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "multi-tenant",
+      "to": "roles",
+      "type": "hard"
+    },
+    {
+      "from": "notifications",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "notifications",
+      "to": "contact-model",
+      "type": "soft"
+    },
+    {
+      "from": "lead-intake-csv",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "lead-intake-form",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "lead-intake-webhook",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "lead-vendor-api",
+      "to": "lead-intake-webhook",
+      "type": "hard"
+    },
+    {
+      "from": "lead-vendor-api",
+      "to": "external-leads",
+      "type": "hard"
+    },
+    {
+      "from": "dialer-single",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "dialer-single",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "dialer-power",
+      "to": "dialer-single",
+      "type": "hard"
+    },
+    {
+      "from": "sms-messaging",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "sms-messaging",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "email-integration",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "email-integration",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "voicemail-drop",
+      "to": "dialer-single",
+      "type": "hard"
+    },
+    {
+      "from": "voicemail-drop",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "call-recording",
+      "to": "dialer-single",
+      "type": "hard"
+    },
+    {
+      "from": "call-recording",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "transcription-live",
+      "to": "call-recording",
+      "type": "hard"
+    },
+    {
+      "from": "ai-extraction",
+      "to": "transcription-live",
+      "type": "hard"
+    },
+    {
+      "from": "ai-extraction",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "pipeline-crm",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "pipeline-crm",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "today-queue",
+      "to": "pipeline-crm",
+      "type": "hard"
+    },
+    {
+      "from": "today-queue",
+      "to": "tasks",
+      "type": "soft"
+    },
+    {
+      "from": "tasks",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "tasks",
+      "to": "notifications",
+      "type": "hard"
+    },
+    {
+      "from": "drip-sequences",
+      "to": "tasks",
+      "type": "hard"
+    },
+    {
+      "from": "drip-sequences",
+      "to": "sms-messaging",
+      "type": "soft"
+    },
+    {
+      "from": "drip-sequences",
+      "to": "email-integration",
+      "type": "soft"
+    },
+    {
+      "from": "lead-scoring",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "lead-scoring",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "lead-scoring",
+      "to": "ai-extraction",
+      "type": "soft"
+    },
+    {
+      "from": "quoting-term",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "quoting-fe",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "quoting-iul",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "quoting-iul",
+      "to": "illustration-gen",
+      "type": "hard"
+    },
+    {
+      "from": "quoting-medicare",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "quoting-aca",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "quote-comparison",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "quote-comparison",
+      "to": "quoting-term",
+      "type": "soft"
+    },
+    {
+      "from": "quote-comparison",
+      "to": "quoting-fe",
+      "type": "soft"
+    },
+    {
+      "from": "illustration-gen",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "illustration-gen",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "uw-cheat-sheet",
+      "to": "contact-model",
+      "type": "soft"
+    },
+    {
+      "from": "rx-prequal",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "rx-prequal",
+      "to": "ai-extraction",
+      "type": "soft"
+    },
+    {
+      "from": "eapp-extension",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "eapp-extension",
+      "to": "external-carriers",
+      "type": "hard"
+    },
+    {
+      "from": "eapp-extension",
+      "to": "quote-comparison",
+      "type": "soft"
+    },
+    {
+      "from": "eapp-extension",
+      "to": "uw-cheat-sheet",
+      "type": "soft"
+    },
+    {
+      "from": "eapp-native",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "eapp-native",
+      "to": "submission-tracker",
+      "type": "hard"
+    },
+    {
+      "from": "eapp-middleware",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "eapp-middleware",
+      "to": "submission-tracker",
+      "type": "hard"
+    },
+    {
+      "from": "esign",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "esign",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "doc-collection",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "doc-collection",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "doc-collection",
+      "to": "sms-messaging",
+      "type": "soft"
+    },
+    {
+      "from": "voice-sig",
+      "to": "call-recording",
+      "type": "hard"
+    },
+    {
+      "from": "voice-sig",
+      "to": "esign",
+      "type": "soft"
+    },
+    {
+      "from": "submission-tracker",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "submission-tracker",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "submission-tracker",
+      "to": "eapp-extension",
+      "type": "soft"
+    },
+    {
+      "from": "requirements-dash",
+      "to": "submission-tracker",
+      "type": "hard"
+    },
+    {
+      "from": "requirements-dash",
+      "to": "notifications",
+      "type": "soft"
+    },
+    {
+      "from": "policy-status",
+      "to": "submission-tracker",
+      "type": "hard"
+    },
+    {
+      "from": "policy-status",
+      "to": "external-carriers",
+      "type": "hard"
+    },
+    {
+      "from": "commission-ingest",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "commission-ingest",
+      "to": "policy-status",
+      "type": "soft"
+    },
+    {
+      "from": "commission-recon",
+      "to": "commission-ingest",
+      "type": "hard"
+    },
+    {
+      "from": "commission-recon",
+      "to": "policy-status",
+      "type": "hard"
+    },
+    {
+      "from": "persistency",
+      "to": "policy-status",
+      "type": "hard"
+    },
+    {
+      "from": "cross-sell",
+      "to": "policy-status",
+      "type": "hard"
+    },
+    {
+      "from": "cross-sell",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "cross-sell",
+      "to": "drip-sequences",
+      "type": "soft"
+    },
+    {
+      "from": "customer-portal",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "customer-portal",
+      "to": "policy-status",
+      "type": "hard"
+    },
+    {
+      "from": "customer-portal",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "customer-portal",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "appointments",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "appointments",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "license-tracking",
+      "to": "contact-model",
+      "type": "hard"
+    },
+    {
+      "from": "license-tracking",
+      "to": "notifications",
+      "type": "soft"
+    },
+    {
+      "from": "ce-tracking",
+      "to": "license-tracking",
+      "type": "hard"
+    },
+    {
+      "from": "ce-tracking",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "surelc-replacement",
+      "to": "appointments",
+      "type": "hard"
+    },
+    {
+      "from": "surelc-replacement",
+      "to": "license-tracking",
+      "type": "hard"
+    },
+    {
+      "from": "surelc-replacement",
+      "to": "esign",
+      "type": "hard"
+    },
+    {
+      "from": "agent-dashboard",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "agent-dashboard",
+      "to": "pipeline-crm",
+      "type": "soft"
+    },
+    {
+      "from": "funnel-analytics",
+      "to": "pipeline-crm",
+      "type": "hard"
+    },
+    {
+      "from": "funnel-analytics",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "lead-roi",
+      "to": "lead-intake-csv",
+      "type": "soft"
+    },
+    {
+      "from": "lead-roi",
+      "to": "policy-status",
+      "type": "hard"
+    },
+    {
+      "from": "call-analytics",
+      "to": "dialer-single",
+      "type": "hard"
+    },
+    {
+      "from": "call-analytics",
+      "to": "activity-log",
+      "type": "hard"
+    },
+    {
+      "from": "carrier-conversion",
+      "to": "quote-comparison",
+      "type": "hard"
+    },
+    {
+      "from": "carrier-conversion",
+      "to": "policy-status",
+      "type": "hard"
+    },
+    {
+      "from": "anon-benchmarks",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "anon-benchmarks",
+      "to": "agent-dashboard",
+      "type": "hard"
+    },
+    {
+      "from": "team-visibility",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "team-visibility",
+      "to": "agent-dashboard",
+      "type": "hard"
+    },
+    {
+      "from": "override-tracking",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "override-tracking",
+      "to": "commission-ingest",
+      "type": "hard"
+    },
+    {
+      "from": "recruiting",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "recruiting",
+      "to": "appointments",
+      "type": "soft"
+    },
+    {
+      "from": "training",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "training",
+      "to": "doc-store",
+      "type": "hard"
+    },
+    {
+      "from": "white-label",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "lead-exchange",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "lead-exchange",
+      "to": "lead-intake-webhook",
+      "type": "hard"
+    },
+    {
+      "from": "lead-exchange",
+      "to": "lead-roi",
+      "type": "soft"
+    },
+    {
+      "from": "lead-exchange",
+      "to": "producer-directory",
+      "type": "soft"
+    },
+    {
+      "from": "carrier-api-spec",
+      "to": "carrier-conversion",
+      "type": "soft"
+    },
+    {
+      "from": "producer-directory",
+      "to": "auth",
+      "type": "hard"
+    },
+    {
+      "from": "producer-directory",
+      "to": "license-tracking",
+      "type": "soft"
+    },
+    {
+      "from": "producer-directory",
+      "to": "appointments",
+      "type": "soft"
+    },
+    {
+      "from": "industry-data",
+      "to": "anon-benchmarks",
+      "type": "hard"
+    },
+    {
+      "from": "industry-data",
+      "to": "carrier-conversion",
+      "type": "soft"
+    },
+    {
+      "from": "industry-data",
+      "to": "multi-tenant",
+      "type": "hard"
+    },
+    {
+      "from": "eapp-middleware",
+      "to": "eapp-extension",
+      "type": "progresses",
+      "rationale": "Tier 2 \u2014 aggregator-based submission."
+    },
+    {
+      "from": "eapp-native",
+      "to": "eapp-middleware",
+      "type": "progresses",
+      "rationale": "Tier 3 \u2014 direct carrier API submission."
+    },
+    {
+      "from": "carrier-end-to-end",
+      "to": "eapp-native",
+      "type": "progresses",
+      "rationale": "Tier 4 \u2014 adds full bidirectional flow per carrier."
+    },
+    {
+      "from": "carrier-end-to-end",
+      "to": "policy-status",
+      "type": "hard",
+      "rationale": "End-to-end requires the policy data flow back."
+    },
+    {
+      "from": "carrier-end-to-end",
+      "to": "commission-ingest",
+      "type": "hard",
+      "rationale": "End-to-end requires the commission data flow back."
+    },
+    {
+      "from": "carrier-end-to-end",
+      "to": "requirements-dash",
+      "type": "hard",
+      "rationale": "End-to-end requires outstanding requirements visibility."
+    },
+    {
+      "from": "carrier-end-to-end",
+      "to": "appointments",
+      "type": "soft",
+      "rationale": "Full integration usually includes contracting."
+    },
+    {
+      "from": "carrier-api-spec",
+      "to": "carrier-end-to-end",
+      "type": "progresses",
+      "rationale": "Tier 5 \u2014 generalize the proven end-to-end into an open standard."
+    },
+    {
+      "from": "rx-prequal",
+      "to": "uw-cheat-sheet",
+      "type": "progresses",
+      "rationale": "Tier 2 \u2014 AI/data-driven version of the same UW capability."
+    },
+    {
+      "from": "illustration-gen",
+      "to": "quote-comparison",
+      "type": "progresses",
+      "rationale": "Tier 3 \u2014 compliant illustration on top of comparison."
+    },
+    {
+      "from": "lead-intake-form",
+      "to": "lead-intake-csv",
+      "type": "progresses",
+      "rationale": "Tier 2 \u2014 semi-automated intake."
+    },
+    {
+      "from": "lead-intake-webhook",
+      "to": "lead-intake-form",
+      "type": "progresses",
+      "rationale": "Tier 3 \u2014 programmatic intake."
+    },
+    {
+      "from": "lead-exchange",
+      "to": "lead-vendor-api",
+      "type": "progresses",
+      "rationale": "Tier 5 \u2014 disintermediate vendor relationships entirely."
+    },
+    {
+      "from": "anon-benchmarks",
+      "to": "team-visibility",
+      "type": "progresses",
+      "rationale": "Tier 3 \u2014 comparison against the broader Opal base."
+    }
   ],
-
   "presets": [
     {
       "id": "lean-mvp",
@@ -247,10 +1518,32 @@
       "description": "Producer-installable workspace, no carrier or IMO dependency. The agent's daily call-flow loop.",
       "selected": [
         "external-carriers",
-        "auth", "contact-model", "activity-log", "doc-store", "roles", "notifications",
-        "lead-intake-csv", "lead-intake-form", "dialer-single", "sms-messaging", "call-recording", "transcription-live", "ai-extraction",
-        "pipeline-crm", "today-queue", "tasks", "quoting-term", "quoting-fe", "quote-comparison", "uw-cheat-sheet", "rx-prequal",
-        "eapp-extension", "esign", "doc-collection", "submission-tracker", "policy-status"
+        "auth",
+        "contact-model",
+        "activity-log",
+        "doc-store",
+        "roles",
+        "notifications",
+        "lead-intake-csv",
+        "lead-intake-form",
+        "dialer-single",
+        "sms-messaging",
+        "call-recording",
+        "transcription-live",
+        "ai-extraction",
+        "pipeline-crm",
+        "today-queue",
+        "tasks",
+        "quoting-term",
+        "quoting-fe",
+        "quote-comparison",
+        "uw-cheat-sheet",
+        "rx-prequal",
+        "eapp-extension",
+        "esign",
+        "doc-collection",
+        "submission-tracker",
+        "policy-status"
       ]
     },
     {
@@ -258,14 +1551,59 @@
       "title": "Full agent workspace",
       "description": "MVP plus advanced capture, full quoting suite, commission tracking, and personal analytics.",
       "selected": [
-        "external-carriers", "external-leads",
-        "auth", "contact-model", "activity-log", "doc-store", "audit-trail", "roles", "notifications",
-        "lead-intake-csv", "lead-intake-form", "lead-intake-webhook", "lead-vendor-api", "dialer-single", "dialer-power", "sms-messaging", "email-integration", "voicemail-drop", "call-recording", "transcription-live", "ai-extraction",
-        "pipeline-crm", "today-queue", "tasks", "drip-sequences", "lead-scoring", "quoting-term", "quoting-fe", "quoting-iul", "quoting-medicare", "quote-comparison", "illustration-gen", "uw-cheat-sheet", "rx-prequal",
-        "eapp-extension", "eapp-middleware", "esign", "doc-collection", "voice-sig", "submission-tracker", "requirements-dash",
-        "policy-status", "commission-ingest", "commission-recon", "persistency", "cross-sell",
-        "license-tracking", "ce-tracking",
-        "agent-dashboard", "funnel-analytics", "lead-roi", "call-analytics", "carrier-conversion"
+        "external-carriers",
+        "external-leads",
+        "auth",
+        "contact-model",
+        "activity-log",
+        "doc-store",
+        "audit-trail",
+        "roles",
+        "notifications",
+        "lead-intake-csv",
+        "lead-intake-form",
+        "lead-intake-webhook",
+        "lead-vendor-api",
+        "dialer-single",
+        "dialer-power",
+        "sms-messaging",
+        "email-integration",
+        "voicemail-drop",
+        "call-recording",
+        "transcription-live",
+        "ai-extraction",
+        "pipeline-crm",
+        "today-queue",
+        "tasks",
+        "drip-sequences",
+        "lead-scoring",
+        "quoting-term",
+        "quoting-fe",
+        "quoting-iul",
+        "quoting-medicare",
+        "quote-comparison",
+        "illustration-gen",
+        "uw-cheat-sheet",
+        "rx-prequal",
+        "eapp-extension",
+        "eapp-middleware",
+        "esign",
+        "doc-collection",
+        "voice-sig",
+        "submission-tracker",
+        "requirements-dash",
+        "policy-status",
+        "commission-ingest",
+        "commission-recon",
+        "persistency",
+        "cross-sell",
+        "license-tracking",
+        "ce-tracking",
+        "agent-dashboard",
+        "funnel-analytics",
+        "lead-roi",
+        "call-analytics",
+        "carrier-conversion"
       ]
     },
     {
@@ -279,6 +1617,199 @@
       "title": "Industry platform",
       "description": "Everything. The full network/marketplace endgame including carrier API standardization.",
       "selected": []
+    }
+  ],
+  "ladders": [
+    {
+      "id": "carrier-integration",
+      "title": "Carrier integration",
+      "description": "Depth of integration with each carrier, from client-side autofill to a shared open API standard.",
+      "tiers": [
+        {
+          "tier": 0,
+          "node": "external-carriers",
+          "label": "Portals exist"
+        },
+        {
+          "tier": 1,
+          "node": "eapp-extension",
+          "label": "Browser extension"
+        },
+        {
+          "tier": 2,
+          "node": "eapp-middleware",
+          "label": "Middleware"
+        },
+        {
+          "tier": 3,
+          "node": "eapp-native",
+          "label": "Native API"
+        },
+        {
+          "tier": 4,
+          "node": "carrier-end-to-end",
+          "label": "End-to-end"
+        },
+        {
+          "tier": 5,
+          "node": "carrier-api-spec",
+          "label": "Open spec"
+        }
+      ]
+    },
+    {
+      "id": "uw-intelligence",
+      "title": "UW intelligence",
+      "description": "Underwriting prediction, from rules-based reference to data-driven AI matching.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "uw-cheat-sheet",
+          "label": "Rules-based"
+        },
+        {
+          "tier": 2,
+          "node": "rx-prequal",
+          "label": "AI / data-driven"
+        }
+      ]
+    },
+    {
+      "id": "quote-depth",
+      "title": "Quote depth",
+      "description": "Quoting capability, from instant rate quotes to compliant cash-value illustrations.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "quoting-term",
+          "label": "Rate quote"
+        },
+        {
+          "tier": 2,
+          "node": "quote-comparison",
+          "label": "Compare"
+        },
+        {
+          "tier": 3,
+          "node": "illustration-gen",
+          "label": "Illustrate"
+        }
+      ]
+    },
+    {
+      "id": "capture-intelligence",
+      "title": "Capture intelligence",
+      "description": "Information extracted from a phone conversation, from raw audio to structured PII.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "call-recording",
+          "label": "Audio"
+        },
+        {
+          "tier": 2,
+          "node": "transcription-live",
+          "label": "Text"
+        },
+        {
+          "tier": 3,
+          "node": "ai-extraction",
+          "label": "Structured fields"
+        }
+      ]
+    },
+    {
+      "id": "lead-intake-automation",
+      "title": "Lead intake automation",
+      "description": "Lead intake mechanism, from manual file upload to a two-sided marketplace.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "lead-intake-csv",
+          "label": "CSV import"
+        },
+        {
+          "tier": 2,
+          "node": "lead-intake-form",
+          "label": "Hosted form"
+        },
+        {
+          "tier": 3,
+          "node": "lead-intake-webhook",
+          "label": "Webhook"
+        },
+        {
+          "tier": 4,
+          "node": "lead-vendor-api",
+          "label": "Vendor API"
+        },
+        {
+          "tier": 5,
+          "node": "lead-exchange",
+          "label": "Marketplace"
+        }
+      ]
+    },
+    {
+      "id": "reporting-depth",
+      "title": "Reporting depth",
+      "description": "Analytics scope, from one agent's metrics to industry-wide data products.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "agent-dashboard",
+          "label": "Personal"
+        },
+        {
+          "tier": 2,
+          "node": "team-visibility",
+          "label": "Team"
+        },
+        {
+          "tier": 3,
+          "node": "anon-benchmarks",
+          "label": "Industry benchmarks"
+        },
+        {
+          "tier": 4,
+          "node": "industry-data",
+          "label": "Data product"
+        }
+      ]
+    },
+    {
+      "id": "commission-handling",
+      "title": "Commission handling",
+      "description": "Commission tracking, from raw statement ingest to expected-vs-paid reconciliation.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "commission-ingest",
+          "label": "Ingest"
+        },
+        {
+          "tier": 2,
+          "node": "commission-recon",
+          "label": "Reconcile"
+        }
+      ]
+    },
+    {
+      "id": "dialer-throughput",
+      "title": "Dialer throughput",
+      "description": "Outbound dialing, from one line at a time to multi-line parallel.",
+      "tiers": [
+        {
+          "tier": 1,
+          "node": "dialer-single",
+          "label": "Single-line"
+        },
+        {
+          "tier": 2,
+          "node": "dialer-power",
+          "label": "Power / parallel"
+        }
+      ]
     }
   ]
 }

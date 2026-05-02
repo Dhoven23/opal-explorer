@@ -2,6 +2,7 @@
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+// Architecture view constants
 const NODE_WIDTH = 168;
 const NODE_HEIGHT = 60;
 const NODE_GAP_X = 16;
@@ -11,7 +12,20 @@ const LANE_LABEL_W = 120;
 const CANVAS_PADDING = 32;
 const NODES_PER_ROW = 6;
 
+// Ladder view constants
+const LADDER_LABEL_W = 110;
+const TIER_NODE_WIDTH = 100;
+const TIER_NODE_HEIGHT = 50;
+const TIER_GAP_X = 16;
+const LADDER_GAP_Y = 24;
+const LADDER_PADDING_Y = 28;
+const LADDER_HEADER_H = 28;
+
+// Hard + progresses both auto-include transitively.
+const REQUIRED_TYPES = new Set(['hard', 'progresses']);
+
 const STORAGE_KEY = 'opal-explorer-selection';
+const VIEW_STORAGE_KEY = 'opal-explorer-view';
 
 const state = {
   graph: null,
@@ -20,9 +34,21 @@ const state = {
   edgesByTo: new Map(),
   layerById: new Map(),
   laneOrder: [],
-  nodePositions: new Map(),     // id -> {x, y, laneId, row, col}
-  laneRects: [],                // [{laneId, top, bottom, height, label}]
-  canvasSize: { w: 1200, h: 800 },
+
+  // Architecture-view layout
+  archPositions: new Map(),       // id -> {x, y, laneId, row, col}
+  archCanvasSize: { w: 1200, h: 800 },
+  laneRects: [],
+
+  // Ladder-view layout
+  ladderPositions: new Map(),     // id -> {x, y, ladderId, tier}
+  ladderCanvasSize: { w: 1200, h: 600 },
+  ladderRows: [],                 // [{ladderId, top, label, height}]
+  ladderTierColumns: [],          // [{tier, x}]
+  ladderNodeIds: new Set(),       // ids that appear in any ladder
+  ladderTierByNode: new Map(),    // id -> {ladderId, tier, label}
+
+  view: 'architecture',           // 'architecture' | 'ladder'
 
   selected: new Set(),
   hoveredId: null,
@@ -32,11 +58,12 @@ const state = {
     required: new Set(),
     unlocks: new Set(),
     softSuggestions: new Set(),
-    requiredReason: new Map(),  // requiredId -> selectedId (one path)
-    unlocksReadiness: new Map() // unlockId -> count of in-scope deps
+    requiredReason: new Map(),
+    unlocksReadiness: new Map()
   },
 
-  urlSyncTimer: null
+  urlSyncTimer: null,
+  transitioning: false
 };
 
 // ---------- Loading ----------
@@ -58,12 +85,23 @@ async function loadGraph() {
     state.edgesByFrom.get(e.from).push(e);
     state.edgesByTo.get(e.to).push(e);
   }
+
+  for (const ladder of graph.ladders || []) {
+    for (const tier of ladder.tiers) {
+      state.ladderNodeIds.add(tier.node);
+      state.ladderTierByNode.set(tier.node, {
+        ladderId: ladder.id,
+        tier: tier.tier,
+        label: tier.label
+      });
+    }
+  }
 }
 
-// ---------- Layout ----------
+// ---------- Layout: architecture ----------
 
-function layout() {
-  state.nodePositions.clear();
+function layoutArchitecture() {
+  state.archPositions.clear();
   state.laneRects = [];
 
   const nodesByLane = new Map();
@@ -94,28 +132,143 @@ function layout() {
       const col = idx % NODES_PER_ROW;
       const x = LANE_LABEL_W + CANVAS_PADDING + col * (NODE_WIDTH + NODE_GAP_X);
       const y = cursorY + LANE_PADDING_Y + row * (NODE_HEIGHT + NODE_GAP_Y);
-      state.nodePositions.set(node.id, { x, y, laneId, row, col });
+      state.archPositions.set(node.id, { x, y, laneId, row, col });
       maxRight = Math.max(maxRight, x + NODE_WIDTH);
     });
 
     cursorY += laneHeight;
   }
 
-  state.canvasSize = {
+  state.archCanvasSize = {
     w: maxRight + CANVAS_PADDING,
     h: cursorY + CANVAS_PADDING
   };
 }
 
+// ---------- Layout: ladder ----------
+
+function layoutLadder() {
+  state.ladderPositions.clear();
+  state.ladderRows = [];
+  state.ladderTierColumns = [];
+
+  const ladders = state.graph.ladders || [];
+  if (!ladders.length) return;
+
+  let minTier = Infinity, maxTier = -Infinity;
+  for (const ladder of ladders) {
+    for (const t of ladder.tiers) {
+      if (t.tier < minTier) minTier = t.tier;
+      if (t.tier > maxTier) maxTier = t.tier;
+    }
+  }
+
+  const tiersTop = CANVAS_PADDING;
+  const headerH = LADDER_HEADER_H;
+  const laddersTop = tiersTop + headerH + 8;
+
+  // Tier column headers
+  for (let t = minTier; t <= maxTier; t++) {
+    const x = LADDER_LABEL_W + CANVAS_PADDING + (t - minTier) * (TIER_NODE_WIDTH + TIER_GAP_X);
+    state.ladderTierColumns.push({ tier: t, x, label: `Tier ${t}` });
+  }
+
+  let maxRight = 0;
+  ladders.forEach((ladder, idx) => {
+    const top = laddersTop + idx * (TIER_NODE_HEIGHT + LADDER_GAP_Y);
+    state.ladderRows.push({
+      ladderId: ladder.id,
+      title: ladder.title,
+      description: ladder.description,
+      top,
+      height: TIER_NODE_HEIGHT
+    });
+    for (const tier of ladder.tiers) {
+      const x = LADDER_LABEL_W + CANVAS_PADDING + (tier.tier - minTier) * (TIER_NODE_WIDTH + TIER_GAP_X);
+      const y = top;
+      state.ladderPositions.set(tier.node, {
+        x, y,
+        ladderId: ladder.id,
+        tier: tier.tier,
+        label: tier.label
+      });
+      maxRight = Math.max(maxRight, x + TIER_NODE_WIDTH);
+    }
+  });
+
+  state.ladderCanvasSize = {
+    w: maxRight + CANVAS_PADDING,
+    h: laddersTop + ladders.length * (TIER_NODE_HEIGHT + LADDER_GAP_Y) + CANVAS_PADDING
+  };
+}
+
+// ---------- View helpers ----------
+
+function currentPositionFor(id) {
+  if (state.view === 'ladder') {
+    const lp = state.ladderPositions.get(id);
+    if (lp) return { ...lp, w: TIER_NODE_WIDTH, h: TIER_NODE_HEIGHT };
+    return null;
+  }
+  const ap = state.archPositions.get(id);
+  if (ap) return { ...ap, w: NODE_WIDTH, h: NODE_HEIGHT };
+  return null;
+}
+
+function nodeAnchorsAt(p) {
+  return {
+    top:    { x: p.x + p.w / 2, y: p.y },
+    bottom: { x: p.x + p.w / 2, y: p.y + p.h },
+    left:   { x: p.x, y: p.y + p.h / 2 },
+    right:  { x: p.x + p.w, y: p.y + p.h / 2 }
+  };
+}
+
+function edgePathArchitecture(edge) {
+  const fromP = state.archPositions.get(edge.from);
+  const toP = state.archPositions.get(edge.to);
+  if (!fromP || !toP) return '';
+  const fromA = nodeAnchorsAt({ ...fromP, w: NODE_WIDTH, h: NODE_HEIGHT });
+  const toA = nodeAnchorsAt({ ...toP, w: NODE_WIDTH, h: NODE_HEIGHT });
+
+  if (fromP.laneId === toP.laneId) {
+    const goingRight = toP.x > fromP.x;
+    const a = goingRight ? fromA.right : fromA.left;
+    const b = goingRight ? toA.left : toA.right;
+    const midY = Math.max(a.y, b.y) + 18;
+    const c1x = a.x + (b.x - a.x) * 0.25;
+    const c2x = a.x + (b.x - a.x) * 0.75;
+    return `M ${a.x} ${a.y} C ${c1x} ${midY}, ${c2x} ${midY}, ${b.x} ${b.y}`;
+  }
+
+  const fromIsAbove = fromP.y < toP.y;
+  const a = fromIsAbove ? fromA.bottom : fromA.top;
+  const b = fromIsAbove ? toA.top : toA.bottom;
+  const offset = 40;
+  const c1y = fromIsAbove ? a.y + offset : a.y - offset;
+  const c2y = fromIsAbove ? b.y - offset : b.y + offset;
+  return `M ${a.x} ${a.y} C ${a.x} ${c1y}, ${b.x} ${c2y}, ${b.x} ${b.y}`;
+}
+
+function edgePathLadder(fromId, toId) {
+  const fromP = state.ladderPositions.get(fromId);
+  const toP = state.ladderPositions.get(toId);
+  if (!fromP || !toP) return '';
+  const fromA = nodeAnchorsAt({ ...fromP, w: TIER_NODE_WIDTH, h: TIER_NODE_HEIGHT });
+  const toA = nodeAnchorsAt({ ...toP, w: TIER_NODE_WIDTH, h: TIER_NODE_HEIGHT });
+  // Simple straight horizontal arrow Tier N → N+1 within a ladder row
+  return `M ${fromA.right.x} ${fromA.right.y} L ${toA.left.x} ${toA.left.y}`;
+}
+
 // ---------- Recompute ----------
 
-function bfsHard(startId, visit) {
+function bfsRequired(startId, visit) {
   const seen = new Set([startId]);
   const queue = [startId];
   while (queue.length) {
     const id = queue.shift();
     for (const e of state.edgesByFrom.get(id) || []) {
-      if (e.type !== 'hard') continue;
+      if (!REQUIRED_TYPES.has(e.type)) continue;
       if (seen.has(e.to)) continue;
       seen.add(e.to);
       visit(e, id);
@@ -129,7 +282,7 @@ function recompute() {
   const requiredReason = new Map();
 
   for (const id of state.selected) {
-    bfsHard(id, (edge) => {
+    bfsRequired(id, (edge) => {
       if (!required.has(edge.to) && !state.selected.has(edge.to)) {
         required.add(edge.to);
         requiredReason.set(edge.to, id);
@@ -146,13 +299,12 @@ function recompute() {
     }
   }
 
-  // Readiness: how many of an unlock's hard deps are already in scope
   const unlocksReadiness = new Map();
   for (const id of unlocks) {
     let inScopeDeps = 0;
     let totalDeps = 0;
     for (const e of state.edgesByFrom.get(id) || []) {
-      if (e.type !== 'hard') continue;
+      if (!REQUIRED_TYPES.has(e.type)) continue;
       totalDeps++;
       if (inScope.has(e.to)) inScopeDeps++;
     }
@@ -189,7 +341,6 @@ function isFiltered(node) {
   }
   return false;
 }
-
 function isSearchHit(node) {
   const q = state.filter.search?.trim().toLowerCase();
   if (!q) return false;
@@ -209,65 +360,32 @@ function svg(tag, attrs = {}, children = []) {
   return el;
 }
 
-function nodeAnchors(id) {
-  const p = state.nodePositions.get(id);
-  if (!p) return null;
-  return {
-    top:    { x: p.x + NODE_WIDTH / 2, y: p.y },
-    bottom: { x: p.x + NODE_WIDTH / 2, y: p.y + NODE_HEIGHT },
-    left:   { x: p.x, y: p.y + NODE_HEIGHT / 2 },
-    right:  { x: p.x + NODE_WIDTH, y: p.y + NODE_HEIGHT / 2 }
-  };
-}
-
-function edgePath(edge) {
-  const fromP = state.nodePositions.get(edge.from);
-  const toP = state.nodePositions.get(edge.to);
-  if (!fromP || !toP) return '';
-
-  const fromA = nodeAnchors(edge.from);
-  const toA = nodeAnchors(edge.to);
-  const sameLane = fromP.laneId === toP.laneId;
-
-  if (sameLane) {
-    // Side-to-side with a downward dip
-    const goingRight = toP.x > fromP.x;
-    const a = goingRight ? fromA.right : fromA.left;
-    const b = goingRight ? toA.left : toA.right;
-    const midY = Math.max(a.y, b.y) + 18;
-    const c1x = a.x + (b.x - a.x) * 0.25;
-    const c2x = a.x + (b.x - a.x) * 0.75;
-    return `M ${a.x} ${a.y} C ${c1x} ${midY}, ${c2x} ${midY}, ${b.x} ${b.y}`;
-  }
-
-  // Cross-lane: from goes from its bottom anchor, to receives at its top anchor.
-  // (Edge direction in spec: from → to; visual goes downward toward dependency.)
-  // But since lanes are stacked top→bottom in declaration order and external is at top,
-  // dependencies (foundation) are below dependents (workflow) in earlier-order lanes...
-  // Actually per spec: from depends on to. We render from->to with vertical control.
-  const fromIsAbove = fromP.y < toP.y;
-  const a = fromIsAbove ? fromA.bottom : fromA.top;
-  const b = fromIsAbove ? toA.top : toA.bottom;
-  const offset = 40;
-  const c1y = fromIsAbove ? a.y + offset : a.y - offset;
-  const c2y = fromIsAbove ? b.y - offset : b.y + offset;
-  return `M ${a.x} ${a.y} C ${a.x} ${c1y}, ${b.x} ${c2y}, ${b.x} ${b.y}`;
-}
-
 function renderCanvas() {
   const canvas = document.getElementById('canvas');
-  canvas.setAttribute('width', state.canvasSize.w);
-  canvas.setAttribute('height', state.canvasSize.h);
-  canvas.setAttribute('viewBox', `0 0 ${state.canvasSize.w} ${state.canvasSize.h}`);
+  const size = state.view === 'ladder' ? state.ladderCanvasSize : state.archCanvasSize;
+  canvas.setAttribute('width', size.w);
+  canvas.setAttribute('height', size.h);
+  canvas.setAttribute('viewBox', `0 0 ${size.w} ${size.h}`);
   canvas.innerHTML = '';
 
-  // Lane backgrounds + labels
+  if (state.view === 'architecture') {
+    renderArchitectureBackground(canvas);
+    renderArchitectureEdges(canvas);
+    renderNodes(canvas, 'architecture');
+  } else {
+    renderLadderBackground(canvas);
+    renderLadderEdges(canvas);
+    renderNodes(canvas, 'ladder');
+  }
+}
+
+function renderArchitectureBackground(canvas) {
   const laneGroup = svg('g', { 'data-layer': 'lanes' });
   state.laneRects.forEach((lane, idx) => {
     laneGroup.appendChild(svg('rect', {
       class: 'lane-bg' + (idx % 2 === 1 ? ' alt' : ''),
       x: 0, y: lane.top,
-      width: state.canvasSize.w, height: lane.height
+      width: state.archCanvasSize.w, height: lane.height
     }));
     const labelEl = svg('text', {
       class: 'lane-label',
@@ -278,46 +396,121 @@ function renderCanvas() {
     laneGroup.appendChild(labelEl);
   });
   canvas.appendChild(laneGroup);
+}
 
-  // Edges (rendered before nodes so nodes sit on top)
+function renderArchitectureEdges(canvas) {
   const edgeGroup = svg('g', { 'data-layer': 'edges' });
   for (const e of state.graph.edges) {
-    const path = svg('path', {
+    edgeGroup.appendChild(svg('path', {
       class: 'edge',
-      d: edgePath(e),
+      d: edgePathArchitecture(e),
       'data-from': e.from,
       'data-to': e.to,
-      'data-type': e.type,
-      'data-soft': e.type === 'soft' ? 'true' : 'false'
-    });
-    edgeGroup.appendChild(path);
+      'data-type': e.type
+    }));
   }
   canvas.appendChild(edgeGroup);
+}
 
-  // Nodes
+function renderLadderBackground(canvas) {
+  const bg = svg('g', { 'data-layer': 'ladder-bg' });
+
+  // Tier column headers
+  for (const col of state.ladderTierColumns) {
+    const t = svg('text', {
+      class: 'lane-label',
+      x: col.x,
+      y: CANVAS_PADDING + 14
+    });
+    t.textContent = col.label;
+    bg.appendChild(t);
+  }
+
+  // Ladder row labels + alternating background
+  state.ladderRows.forEach((row, idx) => {
+    bg.appendChild(svg('rect', {
+      class: 'lane-bg' + (idx % 2 === 1 ? ' alt' : ''),
+      x: 0,
+      y: row.top - LADDER_GAP_Y / 2,
+      width: state.ladderCanvasSize.w,
+      height: row.height + LADDER_GAP_Y
+    }));
+    const t = svg('text', {
+      class: 'lane-label',
+      x: CANVAS_PADDING,
+      y: row.top + row.height / 2 + 4
+    });
+    t.textContent = row.title;
+    bg.appendChild(t);
+  });
+
+  canvas.appendChild(bg);
+}
+
+function renderLadderEdges(canvas) {
+  // Within each ladder row, draw arrows between consecutive tier nodes.
+  const edgeGroup = svg('g', { 'data-layer': 'edges' });
+  for (const ladder of state.graph.ladders || []) {
+    const sorted = [...ladder.tiers].sort((a, b) => a.tier - b.tier);
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const from = sorted[i].node;
+      const to = sorted[i + 1].node;
+      edgeGroup.appendChild(svg('path', {
+        class: 'edge',
+        d: edgePathLadder(from, to),
+        'data-from': from,
+        'data-to': to,
+        'data-type': 'progresses'
+      }));
+    }
+  }
+  canvas.appendChild(edgeGroup);
+}
+
+function renderNodes(canvas, view) {
   const nodeGroup = svg('g', { 'data-layer': 'nodes' });
   for (const node of state.graph.nodes) {
-    const p = state.nodePositions.get(node.id);
+    const inLadder = state.ladderNodeIds.has(node.id);
+    const visibleInView = view === 'architecture' || inLadder;
+    const p = view === 'ladder'
+      ? state.ladderPositions.get(node.id)
+      : state.archPositions.get(node.id);
     if (!p) continue;
+
+    const w = view === 'ladder' ? TIER_NODE_WIDTH : NODE_WIDTH;
+    const h = view === 'ladder' ? TIER_NODE_HEIGHT : NODE_HEIGHT;
+
     const g = svg('g', {
       class: 'node',
       'data-id': node.id,
       'data-layer-id': node.layer,
       'data-category': node.category,
-      transform: `translate(${p.x}, ${p.y})`
+      'data-in-ladder': inLadder ? 'true' : 'false',
+      style: `transform: translate(${p.x}px, ${p.y}px); opacity: ${visibleInView ? 1 : 0};`
     });
     g.appendChild(svg('rect', {
       class: 'node-rect',
       x: 0, y: 0,
-      width: NODE_WIDTH, height: NODE_HEIGHT,
+      width: w, height: h,
       rx: 6, ry: 6
     }));
-    const titleEl = svg('text', { class: 'node-title', x: 10, y: 22 });
-    titleEl.textContent = node.title;
-    g.appendChild(titleEl);
-    const subEl = svg('text', { class: 'node-sub', x: 10, y: 40 });
-    subEl.textContent = node.subtitle;
-    g.appendChild(subEl);
+
+    if (view === 'ladder') {
+      const lt = state.ladderTierByNode.get(node.id);
+      const titleEl = svg('text', { class: 'node-title', x: 8, y: 18 });
+      titleEl.textContent = node.title;
+      g.appendChild(titleEl);
+      const subEl = svg('text', { class: 'node-sub', x: 8, y: 34 });
+      subEl.textContent = lt ? lt.label : node.subtitle;
+      g.appendChild(subEl);
+    } else {
+      const titleEl = svg('text', { class: 'node-title', x: 10, y: 22 });
+      titleEl.textContent = node.title;
+      g.appendChild(titleEl);
+      const subEl = svg('text', { class: 'node-sub', x: 10, y: 40 });
+      subEl.textContent = node.subtitle;
+      g.appendChild(subEl);
+    }
 
     g.addEventListener('click', () => onNodeClick(node.id));
     g.addEventListener('mouseenter', (e) => onNodeHover(node.id, e));
@@ -351,22 +544,21 @@ function applyVisualState() {
     const type = p.getAttribute('data-type');
 
     let edgeState = '';
-
     const fromInScope = inScope.has(from);
     const toInScope = inScope.has(to);
 
-    if (type === 'hard' && fromInScope && toInScope) {
-      // The edge is a reason something is in scope.
-      if (state.selected.has(to)) edgeState = 'feeds-selected';
-      else if (state.derived.required.has(to)) edgeState = 'active-required';
+    if ((type === 'hard' || type === 'progresses') && fromInScope && toInScope) {
+      if (state.selected.has(to)) {
+        edgeState = 'feeds-selected';
+      } else if (state.derived.required.has(to)) {
+        edgeState = type === 'progresses' ? 'active-progresses' : 'active-required';
+      }
     } else if (type === 'soft' && fromInScope && !toInScope) {
-      // Soft suggestion edge
       edgeState = 'active-soft';
     }
 
     p.setAttribute('data-state', edgeState);
 
-    // Hover overlays
     if (state.hoveredId) {
       if (from === state.hoveredId) p.setAttribute('data-hover', 'dep');
       else if (to === state.hoveredId) p.setAttribute('data-hover', 'dependent');
@@ -375,6 +567,22 @@ function applyVisualState() {
       p.removeAttribute('data-hover');
     }
   });
+}
+
+// ---------- View toggle ----------
+
+function setView(nextView) {
+  if (nextView === state.view) return;
+  state.view = nextView;
+  try { localStorage.setItem(VIEW_STORAGE_KEY, nextView); } catch {}
+
+  document.querySelectorAll('#view-toggle .chip').forEach(c => {
+    c.setAttribute('aria-pressed', String(c.dataset.view === nextView));
+  });
+
+  // Re-render the canvas at the new view. CSS handles the transform/opacity transitions.
+  renderCanvas();
+  applyVisualState();
 }
 
 // ---------- Render: drawer ----------
@@ -431,7 +639,6 @@ function nodeRow(node, opts = {}) {
     row.appendChild(why);
   }
 
-  // Hover the canvas node from the drawer row
   row.addEventListener('mouseenter', () => {
     state.hoveredId = node.id;
     applyVisualState();
@@ -581,6 +788,24 @@ function renderFilterChips() {
   }
 }
 
+function renderViewToggle() {
+  const wrap = document.getElementById('view-toggle');
+  wrap.innerHTML = '';
+  for (const v of [
+    { id: 'architecture', label: 'Architecture' },
+    { id: 'ladder', label: 'Ladders' }
+  ]) {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.dataset.view = v.id;
+    btn.textContent = v.label;
+    btn.setAttribute('aria-pressed', String(state.view === v.id));
+    btn.addEventListener('click', () => setView(v.id));
+    wrap.appendChild(btn);
+  }
+}
+
 // ---------- Tooltip ----------
 
 const tooltipEl = () => document.getElementById('tooltip');
@@ -598,7 +823,17 @@ function showTooltip(node, evt) {
   d.textContent = node.description;
   const m = document.createElement('div');
   m.className = 'tt-meta';
-  m.textContent = `${state.layerById.get(node.layer)?.title ?? node.layer} · ${node.category} · weight ${node.weight}`;
+  const ladderInfo = state.ladderTierByNode.get(node.id);
+  const parts = [
+    state.layerById.get(node.layer)?.title ?? node.layer,
+    node.category,
+    `weight ${node.weight}`
+  ];
+  if (ladderInfo) {
+    const ladder = state.graph.ladders.find(l => l.id === ladderInfo.ladderId);
+    parts.push(`${ladder?.title ?? ladderInfo.ladderId} T${ladderInfo.tier}`);
+  }
+  m.textContent = parts.join(' · ');
   tt.appendChild(t);
   tt.appendChild(s);
   tt.appendChild(d);
@@ -817,9 +1052,9 @@ async function boot() {
     return;
   }
 
-  layout();
+  layoutArchitecture();
+  layoutLadder();
 
-  // Restore selection: URL > storage
   const fromUrl = readUrl();
   const fromStorage = readStorage();
   if (fromUrl && fromUrl.length) {
@@ -828,7 +1063,13 @@ async function boot() {
     state.selected = new Set(fromStorage.filter(id => state.nodesById.has(id)));
   }
 
+  try {
+    const v = localStorage.getItem(VIEW_STORAGE_KEY);
+    if (v === 'architecture' || v === 'ladder') state.view = v;
+  } catch {}
+
   renderFilterChips();
+  renderViewToggle();
   renderPresetPicker();
   renderCanvas();
   recompute();

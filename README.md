@@ -1,6 +1,11 @@
 # Opal Feature Explorer
 
-Static single-page web app that displays the complete Opal feature graph as a swim-lane DAG. Click any feature to add it to a working scope; the page shows every transitive hard dependency, suggests soft enhancements, and surfaces what would unlock next.
+Static single-page web app that displays the complete Opal feature graph (71 nodes, 144 edges, 10 layers, 8 maturity ladders, 4 presets). Two views:
+
+- **Architecture** — swim-lane DAG by layer.
+- **Ladders** — same nodes re-arranged by capability dimension and tier.
+
+Click any feature to add it to a working scope; the page pulls in every transitive `hard` and `progresses` dependency, suggests `soft` enhancements, and surfaces what would unlock next.
 
 ## Run locally
 

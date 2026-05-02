@@ -26,6 +26,8 @@ type Layer = 'external' | 'foundation' | 'capture' | 'workflow'
 
 type Category = 'core' | 'feature' | 'integration' | 'ui';
 
+type EdgeType = 'hard' | 'soft' | 'progresses';
+
 interface Node {
   id: string;             // kebab-case, stable, used in URLs and saved scopes
   title: string;          // 1-3 words, the visible label
@@ -40,8 +42,21 @@ interface Node {
 interface Edge {
   from: string;           // node id (the dependent)
   to: string;             // node id (the dependency)
-  type: 'hard' | 'soft';  // hard = required; soft = enhances but optional
+  type: EdgeType;
   rationale?: string;     // optional explanation for tooltip
+}
+
+interface LadderTier {
+  tier: number;           // 0, 1, 2, 3...
+  node: string;           // node id at this tier
+  label: string;          // short display label for the ladder view
+}
+
+interface Ladder {
+  id: string;
+  title: string;          // capability dimension name
+  description: string;
+  tiers: LadderTier[];    // ordered low-to-high
 }
 
 interface Preset {
@@ -52,24 +67,37 @@ interface Preset {
 }
 ```
 
-The current graph contains **70 nodes**, **132 edges**, **10 layers**, and **4 presets**. No cycles (validated DAG).
+The current graph contains **71 nodes**, **144 edges**, **10 layers**, **8 maturity ladders**, and **4 presets**. No cycles (validated DAG).
 
 ### Edge direction convention
 
-`from` depends on `to`. Read every edge as: "`from` requires `to` to exist." This means dependency arrows in the visual point from the dependent (above) toward its dependency (below or peer).
+`from` depends on `to`. Read every edge as: "`from` requires `to` to exist." Dependency arrows in the visual point from the dependent toward its dependency.
 
-### Hard vs soft dependencies
+### Edge types
 
 - **Hard** — the from-node literally cannot function without the to-node. Selection MUST include all transitive hard deps.
-- **Soft** — the from-node is meaningfully better with the to-node, but works alone. Selection should SUGGEST these but not require them.
+- **Soft** — the from-node is meaningfully better with the to-node, but works alone. SUGGEST in side panel; do not auto-include.
+- **Progresses** — the from-node is the next maturity tier of the same capability as the to-node, and requires the previous tier as a prerequisite. Behaves identically to `hard` for dependency math (auto-includes transitively), but renders distinctly in the ladder view (see §4).
 
-Example: `eapp-extension` depends *softly* on `quote-comparison` (autofill is more useful when a quote selection drives the destination carrier) but doesn't strictly require it.
+Example of all three:
+
+- `eapp-native → eapp-middleware` is `progresses` — Tier 3 carrier integration requires Tier 2 to exist first.
+- `eapp-native → contact-model` is `hard` — without the data spine, no module functions.
+- `eapp-extension → quote-comparison` is `soft` — autofill is more useful when a quote selection drives carrier choice, but it works without one.
+
+### Maturity ladders
+
+`ladders` is a top-level array describing capability progressions explicitly. Each ladder names a capability dimension (e.g., "Carrier integration", "Quote depth") and lists the nodes that represent each tier of that capability, low-to-high.
+
+The ladder view (§4) reads from this array directly. The `progresses` edges in the graph reflect the same relationships in dependency form, but the ladder array is what drives the alternate visualization. Keeping them separate means edits to one don't silently invalidate the other.
+
+The eight current ladders: carrier integration, UW intelligence, quote depth, capture intelligence, lead intake automation, reporting depth, commission handling, dialer throughput.
 
 ---
 
-## 3. Layout system
+## 3. Architecture view (default layout)
 
-The graph uses **horizontal swim-lanes**, one per layer, stacked top-to-bottom in the order defined in `layers[].order`. Within a swim-lane, nodes flow left-to-right in declaration order. This gives stable, predictable positions without any layout engine.
+The default view shows the full graph as **horizontal swim-lanes**, one per layer, stacked top-to-bottom in the order defined in `layers[].order`. Within a swim-lane, nodes flow left-to-right in declaration order. This gives stable, predictable positions without any layout engine.
 
 ### Constants
 
@@ -97,24 +125,66 @@ node.x = LANE_LABEL_W + CANVAS_PADDING + (col * (NODE_WIDTH + NODE_GAP_X))
 node.y = laneTop + LANE_PADDING_Y + (row * (NODE_HEIGHT + NODE_GAP_Y))
 ```
 
-Lane labels sit at `x = CANVAS_PADDING, y = laneTop + LANE_PADDING_Y` in 12px secondary text, all caps tracking-wide style is fine here as a deliberate orientation cue.
+Lane labels sit at `x = CANVAS_PADDING, y = laneTop + LANE_PADDING_Y` in 12px secondary text, all caps tracking-wide.
 
 ### Edges
 
 Edges render as SVG paths between node anchors. Anchor logic:
 
 - If `from` and `to` are in different lanes, anchor `from` at its bottom-center and `to` at its top-center. Use a cubic Bezier with a vertical control offset: `M x1 y1 C x1 (y1+40), x2 (y2-40), x2 y2`.
-- If they're in the same lane (rare; mostly within `capture` like `dialer-power → dialer-single`), anchor side-to-side and route with a small downward dip.
+- If they're in the same lane, anchor side-to-side and route with a small downward dip.
 
-Hard edges: solid stroke 1px. Soft edges: dashed `stroke-dasharray="4 4"` 0.5px, 60% opacity.
+Hard edges: solid stroke 1px. Soft edges: dashed `4 4` 0.5px, 60% opacity. Progresses edges: dashed `6 3` 0.75px (see §5 for full edge state table).
 
 ### Performance note
 
-132 edges and 70 nodes is small. A naive full-graph rerender on every state change is fine; no need for virtualization, canvas, or WebGL. Plain SVG is correct.
+144 edges and 71 nodes is small. A naive full-graph rerender on every state change is fine; no need for virtualization, canvas, or WebGL. Plain SVG is correct.
 
 ---
 
-## 4. Visual design
+## 4. Ladder view (alternate layout)
+
+A toggle in the top-right of the canvas switches between the architecture view and the **ladder view**, which reorganizes the same graph by capability dimension instead of by architectural layer. The ladder view is driven by the `ladders[]` array in the graph JSON.
+
+### Layout
+
+Each ladder is one horizontal row. Within a row, the tier nodes are arranged left-to-right in tier order. A row label sits in the left gutter showing the capability name.
+
+```
+LADDER_LABEL_W    = 110
+TIER_NODE_WIDTH   = 100
+TIER_NODE_HEIGHT  = 50
+TIER_GAP_X        = 16
+LADDER_GAP_Y      = 24
+LADDER_PADDING_Y  = 28
+```
+
+A column-header strip at the top labels Tier 1, Tier 2, Tier 3, etc. up to the maximum tier across all ladders. Cells in tier columns where a given ladder has no entry are left empty.
+
+```
+node.x = LADDER_LABEL_W + (tier - minTier) * (TIER_NODE_WIDTH + TIER_GAP_X)
+node.y = laddersTop + ladderIndex * (TIER_NODE_HEIGHT + LADDER_GAP_Y)
+```
+
+Within each row, draw arrows between consecutive tier nodes (Tier N → Tier N+1) using the `progresses` edge style. The arrows ARE the visual story of the ladder.
+
+### Selection in ladder view
+
+Nodes in the ladder view are the same nodes as in the architecture view. Selecting a tier-3 node still pulls in its full transitive dependencies (which often span layers and other ladders) — the ladder view doesn't change the dependency math, it just re-arranges the canvas.
+
+### Interaction with architecture view
+
+Toggling between views animates a `transform` on each node from its architecture-view coordinates to its ladder-view coordinates (or vice versa). Use a 320ms cubic-bezier ease. Nodes that exist in only one view (most nodes are not part of any ladder) fade out / in over 200ms during the transition. Edges fade out and re-render at the new positions; don't try to animate edge paths.
+
+Selection state and side panel content do not change on toggle.
+
+### Why two views
+
+The architecture view answers "what does this scope architecturally look like — what's in foundation, what's in workflow, etc." The ladder view answers "for each capability dimension, how deep are we going?" Both questions matter when scoping. Most users will pick one tier per ladder that's right for their scope, plus additional features that don't sit on any ladder. Toggling between views surfaces gaps: if your scope includes Tier 3 for everything but Tier 1 for carrier integration, the ladder view makes that imbalance obvious in a way the architecture view doesn't.
+
+---
+
+## 5. Visual design
 
 The page uses a flat, neutral aesthetic — closer to a build tool than a marketing page. Light mode and dark mode are both first-class.
 
@@ -180,11 +250,13 @@ Every node is in exactly one of these states at any time. The state determines f
 |--------------------|------------------|--------|----------|---------|
 | `idle`             | `--border`       | 0.5px  | solid    | 0.4     |
 | `idle-soft`        | `--border`       | 0.5px  | 4 4      | 0.25    |
+| `idle-progresses`  | `--text-muted`   | 0.75px | 6 3      | 0.5     |
 | `active-required`  | `--required`     | 1px    | solid    | 0.9     |
 | `active-soft`      | `--unlocks`      | 0.5px  | 4 4      | 0.7     |
+| `active-progresses`| `--required`     | 1px    | 6 3      | 0.9     |
 | `feeds-selected`   | `--accent`       | 1px    | solid    | 0.9     |
 
-An edge is `active-required` when its `from` is selected/required AND its `to` is required (i.e., it's the reason that dep is in scope). It's `feeds-selected` when its `from` is in scope and `to` is selected (visualizing what feeds the selection).
+Progresses edges always render with their distinctive `6 3` dash pattern so the maturity ladder is recognizable in the architecture view. They behave identically to hard edges for the dependency math.
 
 ### Typography
 
@@ -208,7 +280,7 @@ Respect `prefers-reduced-motion: reduce` by clamping all transitions to 0ms.
 
 ---
 
-## 5. Interaction model
+## 6. Interaction model
 
 ### Selection
 
@@ -228,10 +300,13 @@ When the `selected` set changes, recompute:
 ### Pseudocode
 
 ```js
+// hard and progresses both auto-include transitively
+const REQUIRED_TYPES = new Set(['hard', 'progresses']);
+
 function recompute(state) {
   const required = new Set();
   for (const id of state.selected) {
-    bfs(id, 'hard', edge => required.add(edge.to));
+    bfs(id, REQUIRED_TYPES, edge => required.add(edge.to));
   }
 
   const inScope = new Set([...state.selected, ...required]);
@@ -253,13 +328,13 @@ function recompute(state) {
   return { selected: state.selected, required, unlocks, softSuggestions };
 }
 
-function bfs(startId, edgeType, visit) {
+function bfs(startId, edgeTypes, visit) {
   const seen = new Set([startId]);
   const queue = [startId];
   while (queue.length) {
     const id = queue.shift();
     for (const e of edgesByFrom.get(id) || []) {
-      if (edgeType !== 'all' && e.type !== edgeType) continue;
+      if (!edgeTypes.has(e.type)) continue;
       if (seen.has(e.to)) continue;
       seen.add(e.to);
       visit(e);
@@ -287,7 +362,7 @@ In addition to the URL, persist the last-active selection to `localStorage['opal
 
 ---
 
-## 6. Side panel ("Scope drawer")
+## 7. Side panel ("Scope drawer")
 
 A fixed-width drawer on the right of the canvas. Width: 360px. Always visible on desktop; collapses behind a button on narrow screens (<900px viewport).
 
@@ -306,7 +381,7 @@ A fixed-width drawer on the right of the canvas. Width: 360px. Always visible on
    - 110+ weight = **Platform** (full company effort, 18+ months)
    These are deliberately rough. Add a tiny "rough estimate" disclaimer.
 8. **Actions.**
-   - `Load preset →` opens preset picker (see §7).
+   - `Load preset →` opens preset picker (see §8).
    - `Export JSON` downloads `opal-scope-<date>.json` with the current selection plus computed required + metadata.
    - `Copy share link` copies the URL to clipboard.
 
@@ -316,7 +391,7 @@ When nothing is selected, show: "Click any module to start scoping." with a "Try
 
 ---
 
-## 7. Presets
+## 8. Presets
 
 Loading a preset replaces the current `selected` set with the preset's list. Show a confirmation if there's an existing non-empty selection.
 
@@ -331,7 +406,7 @@ Presets are non-binding. After loading, the user can add or remove freely.
 
 ---
 
-## 8. Filters (v1.5 if time)
+## 9. Filters (v1.5 if time)
 
 A small filter row above the canvas:
 
@@ -343,7 +418,7 @@ Filtering never modifies selection. It's a view filter only.
 
 ---
 
-## 9. Tech stack
+## 10. Tech stack
 
 This page is small enough that **vanilla HTML/CSS/JS with no build step** is the right choice. Single `index.html`, a single `style.css`, a single `app.js`, plus the JSON file. Host on GitHub Pages, Cloudflare Pages, Vercel, or any static server.
 
@@ -361,7 +436,7 @@ Modern evergreen: Chrome 110+, Safari 16+, Firefox 110+. No IE, no legacy Edge. 
 
 ---
 
-## 10. File structure
+## 11. File structure
 
 ```
 opal-explorer/
@@ -399,7 +474,7 @@ const state = {
 
 ---
 
-## 11. Editing the graph
+## 12. Editing the graph
 
 The JSON file is the canonical source. To add a new feature:
 
@@ -412,12 +487,14 @@ To verify the graph is still a DAG after edits, run the validation snippet in th
 
 ---
 
-## 12. Acceptance criteria
+## 13. Acceptance criteria
 
 The v1 page is done when:
 
-- [ ] All 70 nodes render in their correct lanes, in declaration order, without overlap.
-- [ ] All 132 edges render with correct hard/soft styling and connect the right nodes.
+- [ ] All 71 nodes render in their correct lanes, in declaration order, without overlap.
+- [ ] All 144 edges render with correct hard/soft/progresses styling and connect the right nodes.
+- [ ] The ladder view toggle reorganizes the canvas into 8 tier-based rows with smooth transitions.
+- [ ] Progresses edges are visually distinct (dashed `6 3` pattern) but auto-include their `to`-side dependencies just like hard edges.
 - [ ] Clicking a node toggles selection and triggers a full recompute in <50ms.
 - [ ] Selecting a node visibly updates required, unlocks, and edge states with smooth (180ms) transitions.
 - [ ] Hovering a node temporarily highlights its immediate neighbors and connecting edges.
@@ -430,7 +507,7 @@ The v1 page is done when:
 
 ---
 
-## 13. Future / not in v1
+## 14. Future / not in v1
 
 - Drag-to-reposition nodes (and persist positions).
 - User-added comments / notes per node (Markdown, persisted to localStorage or backend).

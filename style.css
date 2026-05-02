@@ -328,6 +328,12 @@ button {
 
 .node {
   cursor: pointer;
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 200ms ease;
+  transform-box: fill-box;
+}
+@media (prefers-reduced-motion: reduce) {
+  .node { transition: none; }
 }
 .node-rect {
   fill: transparent;
@@ -389,15 +395,27 @@ button {
   opacity: 0.4;
   transition: stroke var(--transition), stroke-width var(--transition), opacity var(--transition);
 }
-.edge[data-soft="true"] {
+.edge[data-type="soft"] {
   stroke-dasharray: 4 4;
   opacity: 0.25;
+}
+.edge[data-type="progresses"] {
+  stroke: var(--text-muted);
+  stroke-width: 0.75;
+  stroke-dasharray: 6 3;
+  opacity: 0.5;
 }
 .edge[data-state="active-required"] {
   stroke: var(--required);
   stroke-width: 1;
   opacity: 0.9;
   stroke-dasharray: none;
+}
+.edge[data-state="active-progresses"] {
+  stroke: var(--required);
+  stroke-width: 1;
+  stroke-dasharray: 6 3;
+  opacity: 0.9;
 }
 .edge[data-state="active-soft"] {
   stroke: var(--unlocks);
@@ -410,6 +428,9 @@ button {
   stroke-width: 1;
   opacity: 0.9;
   stroke-dasharray: none;
+}
+.edge[data-state="feeds-selected"][data-type="progresses"] {
+  stroke-dasharray: 6 3;
 }
 .edge[data-hover="dep"] {
   stroke: var(--required);
