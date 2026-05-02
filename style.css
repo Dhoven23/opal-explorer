@@ -288,6 +288,38 @@ button {
 }
 .disclaimer { margin: 4px 0 0; font-size: 10px; color: var(--text-faint); }
 
+.rate-section { margin-bottom: 14px; }
+.rate-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.rate-prefix, .rate-suffix {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+#rate-hour {
+  width: 88px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  appearance: textfield;
+}
+#rate-hour:focus { border-color: var(--accent); }
+#rate-hour::-webkit-outer-spin-button,
+#rate-hour::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rate-derived {
+  color: var(--text-faint);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
 .actions { display: flex; flex-direction: column; gap: 10px; }
 .preset-picker {
   display: flex;

@@ -78,6 +78,16 @@
         <p class="disclaimer">Rough estimate. Naive sum is total work content; calendar burn is critical-path × peak team × $10K/wk.</p>
       </section>
 
+      <section class="drawer-section rate-section">
+        <h2>Dev rate</h2>
+        <div class="rate-control">
+          <label for="rate-hour" class="rate-prefix">$</label>
+          <input id="rate-hour" type="number" min="0" step="5" inputmode="numeric" />
+          <span class="rate-suffix">/ hr</span>
+          <span class="rate-derived" id="rate-derived"></span>
+        </div>
+      </section>
+
       <section class="drawer-section actions">
         <div class="preset-picker">
           <label for="preset-select">Load preset</label>

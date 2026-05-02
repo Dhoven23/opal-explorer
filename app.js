@@ -36,6 +36,7 @@ const FOOTER_H = 80;
 const STORAGE_KEY = 'opal-explorer-selection';
 const VIEW_STORAGE_KEY = 'opal-explorer-view';
 const CONFIDENCE_STORAGE_KEY = 'opal-explorer-confidence';
+const RATE_STORAGE_KEY = 'opal-explorer-usd-per-week';
 
 const state = {
   graph: null,
@@ -59,7 +60,8 @@ const state = {
   ladderTierByNode: new Map(),    // id -> {ladderId, tier, label}
 
   view: 'architecture',           // 'architecture' | 'ladder' | 'gantt'
-  confidence: 'expected',         // 'low' | 'expected' | 'high' (Gantt only)
+  confidence: 'expected',         // 'low' | 'expected' | 'high'
+  usdPerWeek: 10000,              // runtime rate; seeded from costModel.usdPerDevWeek
 
   // Last computed Gantt schedule
   gantt: {
@@ -392,6 +394,15 @@ function durationFor(node) {
   return eff.devWeeksExpected ?? 0;
 }
 
+function costForNode(node) {
+  const eff = node.effort || {};
+  return durationFor(node) * (eff.teamSize || 0) * state.usdPerWeek;
+}
+
+function externalCostFor(node) {
+  return node.effort?.externalCostsUsd || 0;
+}
+
 function computeSchedule() {
   const inScope = new Set([...state.selected, ...state.derived.required]);
 
@@ -631,16 +642,16 @@ function renderGantt(canvas) {
   const cpRowY = chartBottom + 20;
   const legendRowY = chartBottom + 44;
 
-  // Tally totals first so we know what to leave room for on the CP row.
+  // Tally totals using the active confidence band + rate.
   let weight = 0;
   let cost = 0;
   let externalCost = 0;
   let nonExtCount = 0;
   for (const id of state.gantt.rowOrder) {
-    const eff = state.nodesById.get(id).effort || {};
-    weight += eff.devWeeksExpected || 0;
-    cost   += eff.costUsdExpected   || 0;
-    externalCost += eff.externalCostsUsd || 0;
+    const n = state.nodesById.get(id);
+    weight += durationFor(n);
+    cost   += costForNode(n);
+    externalCost += externalCostFor(n);
     nonExtCount++;
   }
   const costM = (cost + externalCost) / 1_000_000;
@@ -1125,13 +1136,11 @@ function renderDrawer() {
     let externalCost = 0;
     for (const id of [...selectedIds, ...requiredIds]) {
       const n = state.nodesById.get(id);
-      weight += n?.weight || 0;
-      const eff = n?.effort;
-      if (eff) {
-        devWeeks += eff.devWeeksExpected || 0;
-        cost += eff.costUsdExpected || 0;
-        externalCost += eff.externalCostsUsd || 0;
-      }
+      if (!n) continue;
+      weight += n.weight || 0;
+      devWeeks += durationFor(n);
+      cost += costForNode(n);
+      externalCost += externalCostFor(n);
     }
     let bucket;
     if (weight <= 25) bucket = 'Lean · ~3 months';
@@ -1145,8 +1154,7 @@ function renderDrawer() {
     computeSchedule();
     const cpWeeks = state.gantt.totalWeeks;
     const peakTeam = peakConcurrentTeam();
-    const usdPerWk = state.graph.costModel?.usdPerDevWeek ?? 10000;
-    const calendarBurn = cpWeeks * peakTeam * usdPerWk + externalCost;
+    const calendarBurn = cpWeeks * peakTeam * state.usdPerWeek + externalCost;
 
     document.getElementById('stats-devweeks').textContent =
       devWeeks ? `${devWeeks.toFixed(0)} dev-wk` : '—';
@@ -1295,8 +1303,10 @@ function showTooltip(node, evt) {
   if (eff && eff.devWeeksExpected > 0) {
     const e = document.createElement('div');
     e.className = 'tt-effort';
-    const cost = eff.costUsdExpected ? `$${(eff.costUsdExpected / 1000).toFixed(0)}K` : '—';
-    e.textContent = `${eff.devWeeksLow}–${eff.devWeeksExpected}–${eff.devWeeksHigh} dev-wk · ${eff.teamSize} eng · ${cost}`;
+    const dur = durationFor(node);
+    const cost = costForNode(node);
+    const costStr = cost ? `$${(cost / 1000).toFixed(0)}K` : '—';
+    e.textContent = `${eff.devWeeksLow}–${eff.devWeeksExpected}–${eff.devWeeksHigh} dev-wk · ${eff.teamSize} eng · ${dur.toFixed(1)} wk @ ${state.confidence} → ${costStr}`;
     tt.appendChild(e);
     if (eff.externalCostsUsd) {
       const x = document.createElement('div');
@@ -1520,7 +1530,7 @@ function exportGanttCsv() {
       csvEscape((state.gantt.end.get(id) ?? 0).toFixed(1)),
       csvEscape((state.gantt.duration.get(id) ?? 0).toFixed(1)),
       csvEscape(eff.teamSize ?? ''),
-      csvEscape(eff.costUsdExpected ?? ''),
+      csvEscape(Math.round(costForNode(node))),
       csvEscape(state.gantt.criticalSet.has(id) ? 'true' : 'false'),
       csvEscape(eff.notes ?? '')
     ].join(','));
@@ -1555,8 +1565,33 @@ function resetSelection() {
 
 // ---------- Wire-up ----------
 
+function setRatePerHour(hourly) {
+  const clean = Number.isFinite(hourly) && hourly >= 0 ? hourly : 0;
+  state.usdPerWeek = clean * 40;
+  try { localStorage.setItem(RATE_STORAGE_KEY, String(state.usdPerWeek)); } catch {}
+  renderRateDerived();
+  if (state.view === 'gantt') renderCanvas();
+  renderDrawer();
+}
+
+function renderRateDerived() {
+  const el = document.getElementById('rate-derived');
+  if (!el) return;
+  const wk = Math.round(state.usdPerWeek);
+  el.textContent = wk ? `≈ $${(wk / 1000).toFixed(1)}K / wk` : '';
+}
+
 function wire() {
   document.getElementById('reset-btn').addEventListener('click', resetSelection);
+  const rateInput = document.getElementById('rate-hour');
+  if (rateInput) {
+    rateInput.value = String(Math.round(state.usdPerWeek / 40));
+    renderRateDerived();
+    rateInput.addEventListener('input', () => {
+      const v = parseFloat(rateInput.value);
+      setRatePerHour(Number.isFinite(v) ? v : 0);
+    });
+  }
   document.getElementById('export-btn').addEventListener('click', exportArtifact);
   document.getElementById('share-btn').addEventListener('click', copyShareLink);
   document.getElementById('empty-load-mvp').addEventListener('click', () => loadPreset('lean-mvp'));
@@ -1621,6 +1656,13 @@ async function boot() {
   try {
     const c = localStorage.getItem(CONFIDENCE_STORAGE_KEY);
     if (c === 'low' || c === 'expected' || c === 'high') state.confidence = c;
+  } catch {}
+
+  // Rate: JSON costModel default, then localStorage override.
+  state.usdPerWeek = state.graph.costModel?.usdPerDevWeek ?? 10000;
+  try {
+    const r = parseFloat(localStorage.getItem(RATE_STORAGE_KEY) || '');
+    if (Number.isFinite(r) && r > 0) state.usdPerWeek = r;
   } catch {}
 
   renderFilterChips();
