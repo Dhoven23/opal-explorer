@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Opal Feature Explorer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">Opal Feature Explorer</span>
+    </div>
+    <div class="filters" id="filters">
+      <div class="filter-group" id="filter-layers" aria-label="Layer filters"></div>
+      <div class="filter-group" id="filter-categories" aria-label="Category filters"></div>
+      <input id="search" type="search" placeholder="Search features…" aria-label="Search features" />
+    </div>
+    <button id="toggle-drawer" class="toggle-drawer" aria-label="Toggle scope drawer">Scope</button>
+  </header>
+
+  <main class="layout">
+    <section id="canvas-wrap" class="canvas-wrap" aria-label="Feature graph canvas">
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+    </section>
+
+    <aside id="drawer" class="drawer" aria-label="Scope drawer">
+      <div class="drawer-header">
+        <h1>Scope picker</h1>
+        <button id="reset-btn" class="link-btn" type="button">Reset</button>
+      </div>
+
+      <div id="counts" class="counts">
+        <span class="pill"><span class="pill-label">Selected</span><span id="count-selected">0</span></span>
+        <span class="pill"><span class="pill-label">Auto-included</span><span id="count-required">0</span></span>
+        <span class="pill"><span class="pill-label">Total</span><span id="count-total">0</span></span>
+      </div>
+
+      <div id="empty-state" class="empty-state">
+        <p>Click any module to start scoping.</p>
+        <button id="empty-load-mvp" class="ghost-btn" type="button">Try the Lean MVP preset</button>
+      </div>
+
+      <section class="drawer-section" id="section-selected" hidden>
+        <h2>Selected</h2>
+        <div id="list-selected" class="node-list"></div>
+      </section>
+
+      <section class="drawer-section" id="section-required" hidden>
+        <h2>Auto-included</h2>
+        <div id="list-required" class="node-list"></div>
+      </section>
+
+      <section class="drawer-section" id="section-unlocks" hidden>
+        <h2>Unlocks next</h2>
+        <div id="list-unlocks" class="node-list"></div>
+        <button id="unlocks-show-all" class="link-btn" type="button" hidden>Show all</button>
+      </section>
+
+      <section class="drawer-section" id="section-soft" hidden>
+        <h2>Better with</h2>
+        <div id="list-soft" class="node-list ghost"></div>
+      </section>
+
+      <section class="drawer-section stats" id="section-stats" hidden>
+        <div class="stats-row">
+          <span id="stats-weight" class="stats-weight">0</span>
+          <span id="stats-bucket" class="stats-bucket">—</span>
+        </div>
+        <p class="disclaimer">Rough estimate.</p>
+      </section>
+
+      <section class="drawer-section actions">
+        <div class="preset-picker">
+          <label for="preset-select">Load preset</label>
+          <select id="preset-select"></select>
+        </div>
+        <div class="action-row">
+          <button id="export-btn" class="ghost-btn" type="button">Export JSON</button>
+          <button id="share-btn" class="ghost-btn" type="button">Copy share link</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
