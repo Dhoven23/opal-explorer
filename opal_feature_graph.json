@@ -72,7 +72,15 @@
       "layer": "external",
       "category": "integration",
       "weight": 1,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 0,
+        "devWeeksExpected": 0,
+        "devWeeksHigh": 0,
+        "teamSize": 0,
+        "costUsdExpected": 0,
+        "notes": "External system \u2014 not built by Opal."
+      }
     },
     {
       "id": "external-carriers",
@@ -82,7 +90,15 @@
       "layer": "external",
       "category": "integration",
       "weight": 1,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 0,
+        "devWeeksExpected": 0,
+        "devWeeksHigh": 0,
+        "teamSize": 0,
+        "costUsdExpected": 0,
+        "notes": "External system \u2014 not built by Opal."
+      }
     },
     {
       "id": "external-agent",
@@ -92,7 +108,15 @@
       "layer": "external",
       "category": "ui",
       "weight": 1,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 0,
+        "devWeeksExpected": 0,
+        "devWeeksHigh": 0,
+        "teamSize": 0,
+        "costUsdExpected": 0,
+        "notes": "External system \u2014 not built by Opal."
+      }
     },
     {
       "id": "auth",
@@ -102,7 +126,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.6,
+        "devWeeksExpected": 4.8,
+        "devWeeksHigh": 7.9,
+        "teamSize": 1,
+        "costUsdExpected": 48000
+      }
     },
     {
       "id": "contact-model",
@@ -112,7 +143,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 7.2,
+        "devWeeksExpected": 9.6,
+        "devWeeksHigh": 15.8,
+        "teamSize": 1,
+        "costUsdExpected": 96000
+      }
     },
     {
       "id": "activity-log",
@@ -122,7 +160,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.6,
+        "devWeeksExpected": 4.8,
+        "devWeeksHigh": 7.9,
+        "teamSize": 1,
+        "costUsdExpected": 48000
+      }
     },
     {
       "id": "doc-store",
@@ -132,7 +177,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.6,
+        "devWeeksExpected": 4.8,
+        "devWeeksHigh": 7.9,
+        "teamSize": 1,
+        "costUsdExpected": 48000
+      }
     },
     {
       "id": "audit-trail",
@@ -142,7 +194,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 8.3,
+        "devWeeksExpected": 11.0,
+        "devWeeksHigh": 18.2,
+        "teamSize": 1,
+        "costUsdExpected": 110000
+      }
     },
     {
       "id": "roles",
@@ -152,7 +211,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.6,
+        "devWeeksExpected": 4.8,
+        "devWeeksHigh": 7.9,
+        "teamSize": 1,
+        "costUsdExpected": 48000
+      }
     },
     {
       "id": "multi-tenant",
@@ -162,7 +228,15 @@
       "layer": "foundation",
       "category": "core",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 10,
+        "devWeeksExpected": 14,
+        "devWeeksHigh": 22,
+        "teamSize": 2,
+        "notes": "Foundational refactor. ~3\u00d7 the cost if retrofitted after the fact \u2014 do it once, do it early.",
+        "costUsdExpected": 280000
+      }
     },
     {
       "id": "notifications",
@@ -172,7 +246,14 @@
       "layer": "foundation",
       "category": "core",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.6,
+        "devWeeksExpected": 4.8,
+        "devWeeksHigh": 7.9,
+        "teamSize": 1,
+        "costUsdExpected": 48000
+      }
     },
     {
       "id": "lead-intake-csv",
@@ -182,7 +263,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "lead-intake-form",
@@ -192,7 +280,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "lead-intake-webhook",
@@ -202,7 +297,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "lead-vendor-api",
@@ -212,7 +314,14 @@
       "layer": "capture",
       "category": "integration",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 7.8,
+        "devWeeksExpected": 10.4,
+        "devWeeksHigh": 17.2,
+        "teamSize": 1,
+        "costUsdExpected": 104000
+      }
     },
     {
       "id": "dialer-single",
@@ -222,7 +331,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "dialer-power",
@@ -232,7 +348,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 12.0,
+        "devWeeksExpected": 16.0,
+        "devWeeksHigh": 26.4,
+        "teamSize": 2,
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "sms-messaging",
@@ -242,7 +365,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.9,
+        "devWeeksExpected": 9.2,
+        "devWeeksHigh": 15.2,
+        "teamSize": 1,
+        "costUsdExpected": 92000
+      }
     },
     {
       "id": "email-integration",
@@ -252,7 +382,14 @@
       "layer": "capture",
       "category": "integration",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 7.8,
+        "devWeeksExpected": 10.4,
+        "devWeeksHigh": 17.2,
+        "teamSize": 1,
+        "costUsdExpected": 104000
+      }
     },
     {
       "id": "voicemail-drop",
@@ -262,7 +399,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "call-recording",
@@ -272,7 +416,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.4,
+        "devWeeksExpected": 4.6,
+        "devWeeksHigh": 7.6,
+        "teamSize": 1,
+        "costUsdExpected": 46000
+      }
     },
     {
       "id": "transcription-live",
@@ -282,7 +433,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 8.4,
+        "devWeeksExpected": 11.2,
+        "devWeeksHigh": 18.5,
+        "teamSize": 1,
+        "costUsdExpected": 112000
+      }
     },
     {
       "id": "ai-extraction",
@@ -292,7 +450,14 @@
       "layer": "capture",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 8.4,
+        "devWeeksExpected": 11.2,
+        "devWeeksHigh": 18.5,
+        "teamSize": 1,
+        "costUsdExpected": 112000
+      }
     },
     {
       "id": "pipeline-crm",
@@ -302,7 +467,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "today-queue",
@@ -312,7 +484,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 4.2,
+        "devWeeksExpected": 5.6,
+        "devWeeksHigh": 9.2,
+        "teamSize": 1,
+        "costUsdExpected": 56000
+      }
     },
     {
       "id": "tasks",
@@ -322,7 +501,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "drip-sequences",
@@ -332,7 +518,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "lead-scoring",
@@ -342,7 +535,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 8.4,
+        "devWeeksExpected": 11.2,
+        "devWeeksHigh": 18.5,
+        "teamSize": 1,
+        "costUsdExpected": 112000
+      }
     },
     {
       "id": "quoting-term",
@@ -352,7 +552,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "quoting-fe",
@@ -362,7 +569,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "quoting-iul",
@@ -372,7 +586,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 13.8,
+        "devWeeksExpected": 18.4,
+        "devWeeksHigh": 30.4,
+        "teamSize": 2,
+        "costUsdExpected": 368000
+      }
     },
     {
       "id": "quoting-medicare",
@@ -382,7 +603,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 13.8,
+        "devWeeksExpected": 18.4,
+        "devWeeksHigh": 30.4,
+        "teamSize": 2,
+        "costUsdExpected": 368000
+      }
     },
     {
       "id": "quoting-aca",
@@ -392,7 +620,14 @@
       "layer": "workflow",
       "category": "integration",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 15.6,
+        "devWeeksExpected": 20.8,
+        "devWeeksHigh": 34.3,
+        "teamSize": 2,
+        "costUsdExpected": 416000
+      }
     },
     {
       "id": "quote-comparison",
@@ -402,7 +637,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "illustration-gen",
@@ -412,7 +654,15 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 10,
+        "devWeeksExpected": 16,
+        "devWeeksHigh": 28,
+        "teamSize": 2,
+        "notes": "Per-carrier compliance review cycles serial-bottleneck this work.",
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "uw-cheat-sheet",
@@ -422,7 +672,14 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "rx-prequal",
@@ -432,7 +689,16 @@
       "layer": "workflow",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 8,
+        "devWeeksExpected": 14,
+        "devWeeksHigh": 24,
+        "teamSize": 2,
+        "externalCostsUsd": 75000,
+        "notes": "$50\u2013100K external for prescription dataset. Model accuracy improves with submission volume \u2014 long-term moat.",
+        "costUsdExpected": 280000
+      }
     },
     {
       "id": "eapp-extension",
@@ -442,7 +708,15 @@
       "layer": "conversion",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 12,
+        "devWeeksExpected": 18,
+        "devWeeksHigh": 28,
+        "teamSize": 2,
+        "notes": "Per-carrier work; covers ~10 high-volume carriers at ~1.5 wk each. Gives day-one carrier coverage with zero carrier cooperation.",
+        "costUsdExpected": 360000
+      }
     },
     {
       "id": "eapp-native",
@@ -452,7 +726,15 @@
       "layer": "conversion",
       "category": "integration",
       "weight": 5,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 4,
+        "devWeeksExpected": 6,
+        "devWeeksHigh": 10,
+        "teamSize": 1,
+        "notes": "PER-CARRIER integration. Multiply by integrated-carrier count for total. Gated on carrier API access \u2014 unblocked by relationship work, not eng.",
+        "costUsdExpected": 60000
+      }
     },
     {
       "id": "eapp-middleware",
@@ -462,7 +744,15 @@
       "layer": "conversion",
       "category": "integration",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6,
+        "devWeeksExpected": 10,
+        "devWeeksHigh": 16,
+        "teamSize": 1,
+        "notes": "Per-aggregator-carrier-list config. Aggregator amortizes some work across carriers.",
+        "costUsdExpected": 100000
+      }
     },
     {
       "id": "esign",
@@ -472,7 +762,14 @@
       "layer": "conversion",
       "category": "integration",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 9.0,
+        "devWeeksExpected": 12.0,
+        "devWeeksHigh": 19.7,
+        "teamSize": 1,
+        "costUsdExpected": 120000
+      }
     },
     {
       "id": "doc-collection",
@@ -482,7 +779,14 @@
       "layer": "conversion",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "voice-sig",
@@ -492,7 +796,14 @@
       "layer": "conversion",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "submission-tracker",
@@ -502,7 +813,14 @@
       "layer": "conversion",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "requirements-dash",
@@ -512,7 +830,14 @@
       "layer": "conversion",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "policy-status",
@@ -522,7 +847,14 @@
       "layer": "policy",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": true
+      "mvpCandidate": true,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "commission-ingest",
@@ -532,7 +864,14 @@
       "layer": "policy",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 12.0,
+        "devWeeksExpected": 16.0,
+        "devWeeksHigh": 26.4,
+        "teamSize": 2,
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "commission-recon",
@@ -542,7 +881,15 @@
       "layer": "policy",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 10,
+        "devWeeksExpected": 18,
+        "devWeeksHigh": 32,
+        "teamSize": 1,
+        "notes": "Carrier statement formats are wildly inconsistent. Effort grows roughly linearly with carrier count via the long tail of edge cases.",
+        "costUsdExpected": 180000
+      }
     },
     {
       "id": "persistency",
@@ -552,7 +899,14 @@
       "layer": "policy",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "cross-sell",
@@ -562,7 +916,14 @@
       "layer": "policy",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "customer-portal",
@@ -572,7 +933,14 @@
       "layer": "policy",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 12.0,
+        "devWeeksExpected": 16.0,
+        "devWeeksHigh": 26.4,
+        "teamSize": 2,
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "appointments",
@@ -582,7 +950,14 @@
       "layer": "contracting",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "license-tracking",
@@ -592,7 +967,14 @@
       "layer": "contracting",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "ce-tracking",
@@ -602,7 +984,14 @@
       "layer": "contracting",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "surelc-replacement",
@@ -612,7 +1001,14 @@
       "layer": "contracting",
       "category": "feature",
       "weight": 5,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 24.0,
+        "devWeeksExpected": 32.0,
+        "devWeeksHigh": 52.8,
+        "teamSize": 2,
+        "costUsdExpected": 640000
+      }
     },
     {
       "id": "agent-dashboard",
@@ -622,7 +1018,14 @@
       "layer": "reporting",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "funnel-analytics",
@@ -632,7 +1035,14 @@
       "layer": "reporting",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "lead-roi",
@@ -642,7 +1052,14 @@
       "layer": "reporting",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "call-analytics",
@@ -652,7 +1069,14 @@
       "layer": "reporting",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "carrier-conversion",
@@ -662,7 +1086,14 @@
       "layer": "reporting",
       "category": "feature",
       "weight": 2,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 3.0,
+        "devWeeksExpected": 4.0,
+        "devWeeksHigh": 6.6,
+        "teamSize": 1,
+        "costUsdExpected": 40000
+      }
     },
     {
       "id": "anon-benchmarks",
@@ -672,7 +1103,14 @@
       "layer": "reporting",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 12.0,
+        "devWeeksExpected": 16.0,
+        "devWeeksHigh": 26.4,
+        "teamSize": 2,
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "team-visibility",
@@ -682,7 +1120,14 @@
       "layer": "agency",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "override-tracking",
@@ -692,7 +1137,14 @@
       "layer": "agency",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 12.0,
+        "devWeeksExpected": 16.0,
+        "devWeeksHigh": 26.4,
+        "teamSize": 2,
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "recruiting",
@@ -702,7 +1154,14 @@
       "layer": "agency",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "training",
@@ -712,7 +1171,14 @@
       "layer": "agency",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "white-label",
@@ -722,7 +1188,14 @@
       "layer": "agency",
       "category": "feature",
       "weight": 3,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 6.0,
+        "devWeeksExpected": 8.0,
+        "devWeeksHigh": 13.2,
+        "teamSize": 1,
+        "costUsdExpected": 80000
+      }
     },
     {
       "id": "lead-exchange",
@@ -732,7 +1205,16 @@
       "layer": "network",
       "category": "feature",
       "weight": 5,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 24,
+        "devWeeksExpected": 40,
+        "devWeeksHigh": 70,
+        "teamSize": 3,
+        "externalCostsUsd": 100000,
+        "notes": "Two-sided marketplace + payments + escrow + dispute resolution. Marketplace dynamics dwarf eng cost.",
+        "costUsdExpected": 1200000
+      }
     },
     {
       "id": "carrier-end-to-end",
@@ -742,7 +1224,15 @@
       "layer": "network",
       "category": "feature",
       "weight": 5,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 8,
+        "devWeeksExpected": 12,
+        "devWeeksHigh": 20,
+        "teamSize": 2,
+        "notes": "PER-CARRIER cost. Submission + UW status + commission feed. Most expensive single integration line in the system.",
+        "costUsdExpected": 240000
+      }
     },
     {
       "id": "carrier-api-spec",
@@ -752,7 +1242,16 @@
       "layer": "network",
       "category": "feature",
       "weight": 5,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 20,
+        "devWeeksExpected": 40,
+        "devWeeksHigh": 80,
+        "teamSize": 1,
+        "externalCostsUsd": 0,
+        "notes": "Standards/coordination work, not pure engineering. Majority of effort is partner alignment and spec evangelism.",
+        "costUsdExpected": 400000
+      }
     },
     {
       "id": "producer-directory",
@@ -762,7 +1261,14 @@
       "layer": "network",
       "category": "feature",
       "weight": 4,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 12.0,
+        "devWeeksExpected": 16.0,
+        "devWeeksHigh": 26.4,
+        "teamSize": 2,
+        "costUsdExpected": 320000
+      }
     },
     {
       "id": "industry-data",
@@ -772,7 +1278,16 @@
       "layer": "network",
       "category": "feature",
       "weight": 5,
-      "mvpCandidate": false
+      "mvpCandidate": false,
+      "effort": {
+        "devWeeksLow": 16,
+        "devWeeksExpected": 28,
+        "devWeeksHigh": 50,
+        "teamSize": 2,
+        "externalCostsUsd": 50000,
+        "notes": "Compliance, contracts, and partner agreements drive cost more than engineering.",
+        "costUsdExpected": 560000
+      }
     }
   ],
   "edges": [
@@ -1811,5 +2326,9 @@
         }
       ]
     }
-  ]
+  ],
+  "costModel": {
+    "usdPerDevWeek": 10000,
+    "description": "Fully-loaded blended weekly rate per engineer (salary + benefits + overhead). Default $10,000/wk."
+  }
 }

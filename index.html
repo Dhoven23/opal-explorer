@@ -14,6 +14,7 @@
     </div>
     <div class="filters" id="filters">
       <div class="filter-group view-toggle" id="view-toggle" aria-label="View toggle"></div>
+      <div class="filter-group confidence-toggle" id="confidence-toggle" aria-label="Confidence band" hidden></div>
       <div class="filter-group" id="filter-layers" aria-label="Layer filters"></div>
       <div class="filter-group" id="filter-categories" aria-label="Category filters"></div>
       <input id="search" type="search" placeholder="Search features…" aria-label="Search features" />
@@ -69,7 +70,12 @@
           <span id="stats-weight" class="stats-weight">0</span>
           <span id="stats-bucket" class="stats-bucket">—</span>
         </div>
-        <p class="disclaimer">Rough estimate.</p>
+        <dl class="stats-table">
+          <div><dt>Dev-weeks</dt><dd id="stats-devweeks">—</dd></div>
+          <div><dt>Naive cost</dt><dd id="stats-naive">—</dd></div>
+          <div><dt>Calendar burn</dt><dd id="stats-burn">—</dd></div>
+        </dl>
+        <p class="disclaimer">Rough estimate. Naive sum is total work content; calendar burn is critical-path × peak team × $10K/wk.</p>
       </section>
 
       <section class="drawer-section actions">

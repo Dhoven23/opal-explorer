@@ -24,8 +24,18 @@ const LADDER_HEADER_H = 28;
 // Hard + progresses both auto-include transitively.
 const REQUIRED_TYPES = new Set(['hard', 'progresses']);
 
+// Gantt view constants
+const WEEK_PX = 8;
+const LABEL_COL_W = 200;
+const ROW_H = 24;
+const BAR_H = 18;
+const BAR_PAD_TOP = 3;
+const HEADER_H = 50;
+const FOOTER_H = 70;
+
 const STORAGE_KEY = 'opal-explorer-selection';
 const VIEW_STORAGE_KEY = 'opal-explorer-view';
+const CONFIDENCE_STORAGE_KEY = 'opal-explorer-confidence';
 
 const state = {
   graph: null,
@@ -48,7 +58,19 @@ const state = {
   ladderNodeIds: new Set(),       // ids that appear in any ladder
   ladderTierByNode: new Map(),    // id -> {ladderId, tier, label}
 
-  view: 'architecture',           // 'architecture' | 'ladder'
+  view: 'architecture',           // 'architecture' | 'ladder' | 'gantt'
+  confidence: 'expected',         // 'low' | 'expected' | 'high' (Gantt only)
+
+  // Last computed Gantt schedule
+  gantt: {
+    rowOrder: [],                 // ordered node ids included as bars
+    start: new Map(),             // id -> start week
+    end: new Map(),               // id -> end week
+    duration: new Map(),          // id -> duration weeks (per current confidence)
+    totalWeeks: 0,
+    criticalPath: [],             // ids in order, foundation-first
+    criticalSet: new Set()
+  },
 
   selected: new Set(),
   hoveredId: null,
@@ -360,8 +382,331 @@ function svg(tag, attrs = {}, children = []) {
   return el;
 }
 
+// ---------- Gantt scheduling ----------
+
+function durationFor(node) {
+  const eff = node.effort || {};
+  const c = state.confidence;
+  if (c === 'low') return eff.devWeeksLow ?? 0;
+  if (c === 'high') return eff.devWeeksHigh ?? 0;
+  return eff.devWeeksExpected ?? 0;
+}
+
+function computeSchedule() {
+  const inScope = new Set([...state.selected, ...state.derived.required]);
+
+  // Exclude external nodes from the chart (per spec §3).
+  const scheduled = [];
+  for (const id of inScope) {
+    const node = state.nodesById.get(id);
+    if (!node) continue;
+    if (node.layer === 'external') continue;
+    scheduled.push(id);
+  }
+
+  // Build deps-of restricted to in-scope schedulable nodes.
+  const depsOf = new Map();
+  for (const id of scheduled) depsOf.set(id, new Set());
+  for (const e of state.graph.edges) {
+    if (!REQUIRED_TYPES.has(e.type)) continue;
+    if (!depsOf.has(e.from) || !depsOf.has(e.to)) continue;
+    depsOf.get(e.from).add(e.to);
+  }
+
+  const start = new Map();
+  const end = new Map();
+  const duration = new Map();
+  const visiting = new Set();
+
+  function compute(id) {
+    if (end.has(id)) return;
+    if (visiting.has(id)) return; // safety against unexpected cycles
+    visiting.add(id);
+    const deps = [...depsOf.get(id)];
+    for (const d of deps) compute(d);
+    const s = deps.length ? Math.max(...deps.map(d => end.get(d) ?? 0)) : 0;
+    const dur = durationFor(state.nodesById.get(id));
+    start.set(id, s);
+    duration.set(id, dur);
+    end.set(id, s + dur);
+    visiting.delete(id);
+  }
+  for (const id of scheduled) compute(id);
+
+  const totalWeeks = end.size ? Math.max(...end.values()) : 0;
+
+  // Critical path: trace back from the latest-ending node, picking the dep with the latest end.
+  const criticalPath = [];
+  if (end.size) {
+    let cur = scheduled.reduce((best, id) => (end.get(id) > end.get(best) ? id : best), scheduled[0]);
+    criticalPath.unshift(cur);
+    while (true) {
+      const deps = [...depsOf.get(cur)];
+      if (!deps.length) break;
+      cur = deps.reduce((best, d) => (end.get(d) > end.get(best) ? d : best), deps[0]);
+      criticalPath.unshift(cur);
+    }
+  }
+  const criticalSet = new Set(criticalPath);
+
+  // Row order: layer order, then ascending start week.
+  const layerOrder = new Map();
+  state.laneOrder.forEach((id, idx) => layerOrder.set(id, idx));
+  const rowOrder = [...scheduled].sort((a, b) => {
+    const la = layerOrder.get(state.nodesById.get(a).layer) ?? 99;
+    const lb = layerOrder.get(state.nodesById.get(b).layer) ?? 99;
+    if (la !== lb) return la - lb;
+    const sa = start.get(a) ?? 0;
+    const sb = start.get(b) ?? 0;
+    if (sa !== sb) return sa - sb;
+    return state.nodesById.get(a).title.localeCompare(state.nodesById.get(b).title);
+  });
+
+  state.gantt = { rowOrder, start, end, duration, totalWeeks, criticalPath, criticalSet };
+}
+
+function ganttCanvasSize() {
+  const total = Math.max(state.gantt.totalWeeks, 1);
+  const w = LABEL_COL_W + total * WEEK_PX + 24;
+  const h = HEADER_H + state.gantt.rowOrder.length * ROW_H + FOOTER_H;
+  return { w: Math.max(w, 720), h: Math.max(h, 320) };
+}
+
+function renderGantt(canvas) {
+  computeSchedule();
+  const size = ganttCanvasSize();
+  canvas.setAttribute('width', size.w);
+  canvas.setAttribute('height', size.h);
+  canvas.setAttribute('viewBox', `0 0 ${size.w} ${size.h}`);
+  canvas.innerHTML = '';
+
+  const total = state.gantt.totalWeeks;
+  const chartLeft = LABEL_COL_W;
+  const chartRight = LABEL_COL_W + total * WEEK_PX;
+  const chartTop = HEADER_H;
+  const chartBottom = HEADER_H + state.gantt.rowOrder.length * ROW_H;
+
+  const root = svg('g', { 'data-layer': 'gantt' });
+
+  // Empty state
+  if (!state.gantt.rowOrder.length) {
+    const t = svg('text', { class: 'gantt-empty', x: 32, y: 80 });
+    t.textContent = 'Nothing in scope yet — click a module to start.';
+    root.appendChild(t);
+    canvas.appendChild(root);
+    return;
+  }
+
+  // Phase boundaries: first non-foundation start week, first policy/post-sale start week.
+  let firstNonFoundation = null;
+  let firstPolicy = null;
+  for (const id of state.gantt.rowOrder) {
+    const node = state.nodesById.get(id);
+    const s = state.gantt.start.get(id);
+    if (firstNonFoundation === null && node.layer !== 'foundation' && node.layer !== 'external') {
+      firstNonFoundation = s;
+    }
+    if (firstPolicy === null && (node.layer === 'policy' || node.layer === 'reporting' || node.layer === 'agency' || node.layer === 'network')) {
+      firstPolicy = s;
+    }
+  }
+
+  // --- Header: phase labels + week numbers ---
+  const header = svg('g', { 'data-layer': 'gantt-header' });
+  const phases = [];
+  if (firstNonFoundation !== null) {
+    phases.push({ label: 'Foundation', from: 0, to: firstNonFoundation });
+    if (firstPolicy !== null && firstPolicy > firstNonFoundation) {
+      phases.push({ label: 'Build',  from: firstNonFoundation, to: firstPolicy });
+      phases.push({ label: 'Polish', from: firstPolicy, to: total });
+    } else {
+      phases.push({ label: 'Build', from: firstNonFoundation, to: total });
+    }
+  } else {
+    phases.push({ label: 'Schedule', from: 0, to: total });
+  }
+  for (const p of phases) {
+    const x1 = chartLeft + p.from * WEEK_PX;
+    const x2 = chartLeft + p.to * WEEK_PX;
+    const t = svg('text', {
+      class: 'gantt-phase-label',
+      x: (x1 + x2) / 2,
+      y: 18,
+      'text-anchor': 'middle'
+    });
+    t.textContent = p.label;
+    header.appendChild(t);
+  }
+  // Week numbers every 8 weeks
+  for (let w = 0; w <= total; w += 8) {
+    const x = chartLeft + w * WEEK_PX;
+    const t = svg('text', {
+      class: 'gantt-week-label',
+      x, y: 38,
+      'text-anchor': 'middle'
+    });
+    t.textContent = `wk ${w}`;
+    header.appendChild(t);
+  }
+  // Hairline
+  header.appendChild(svg('line', {
+    class: 'gantt-hairline',
+    x1: 0, x2: size.w, y1: HEADER_H - 0.5, y2: HEADER_H - 0.5
+  }));
+  root.appendChild(header);
+
+  // --- Grid lines ---
+  const grid = svg('g', { 'data-layer': 'gantt-grid' });
+  for (let w = 0; w <= total; w += 8) {
+    const x = chartLeft + w * WEEK_PX;
+    grid.appendChild(svg('line', {
+      class: 'gantt-grid-line',
+      x1: x, x2: x, y1: chartTop, y2: chartBottom
+    }));
+  }
+  // Phase boundary markers (dashed)
+  for (const p of phases.slice(1)) {
+    const x = chartLeft + p.from * WEEK_PX;
+    grid.appendChild(svg('line', {
+      class: 'gantt-phase-marker',
+      x1: x, x2: x, y1: chartTop, y2: chartBottom
+    }));
+  }
+  root.appendChild(grid);
+
+  // --- Bars ---
+  const bars = svg('g', { 'data-layer': 'gantt-bars' });
+  state.gantt.rowOrder.forEach((id, rowIdx) => {
+    const node = state.nodesById.get(id);
+    const s = state.gantt.start.get(id) ?? 0;
+    const dur = Math.max(state.gantt.duration.get(id) ?? 0, 0.25); // min visible
+    const isCritical = state.gantt.criticalSet.has(id);
+    const isSelected = state.selected.has(id);
+    const isRequired = state.derived.required.has(id) && !isSelected;
+
+    const y = chartTop + rowIdx * ROW_H;
+    const barX = chartLeft + s * WEEK_PX;
+    const barW = Math.max(dur * WEEK_PX, 4);
+
+    // Row label (clickable)
+    const rowG = svg('g', {
+      class: 'gantt-row',
+      'data-id': id,
+      'data-critical': isCritical ? 'true' : 'false',
+      'data-required': isRequired ? 'true' : 'false',
+      'data-selected': isSelected ? 'true' : 'false'
+    });
+    rowG.appendChild(svg('rect', {
+      class: 'gantt-row-hit',
+      x: 0, y, width: size.w, height: ROW_H
+    }));
+    const labelEl = svg('text', {
+      class: 'gantt-row-label',
+      x: 12, y: y + ROW_H / 2 + 4
+    });
+    labelEl.textContent = truncate(node.title, 24);
+    rowG.appendChild(labelEl);
+
+    // Bar
+    rowG.appendChild(svg('rect', {
+      class: 'gantt-bar',
+      'data-layer-id': node.layer,
+      x: barX, y: y + BAR_PAD_TOP,
+      width: barW, height: BAR_H,
+      rx: 3, ry: 3
+    }));
+
+    // Click + hover
+    rowG.addEventListener('click', () => onNodeClick(id));
+    rowG.addEventListener('mouseenter', (e) => onNodeHover(id, e));
+    rowG.addEventListener('mouseleave', () => onNodeLeave(id));
+    rowG.addEventListener('mousemove', (e) => moveTooltip(e));
+
+    bars.appendChild(rowG);
+  });
+  root.appendChild(bars);
+
+  // --- Footer ---
+  const footer = svg('g', { 'data-layer': 'gantt-footer' });
+  const footerY = chartBottom + 18;
+  const cpLabel = svg('text', { class: 'gantt-cp-label', x: 12, y: footerY });
+  const cpTitles = state.gantt.criticalPath
+    .map(id => state.nodesById.get(id)?.title ?? id)
+    .join(' → ');
+  cpLabel.textContent = `★ Critical path: ${state.gantt.totalWeeks.toFixed(1)} wk — ${cpTitles}`;
+  footer.appendChild(cpLabel);
+
+  // Totals readout
+  const inScopeIds = new Set([...state.selected, ...state.derived.required]);
+  let weight = 0;
+  let cost = 0;
+  let externalCost = 0;
+  let nonExtCount = 0;
+  for (const id of state.gantt.rowOrder) {
+    const eff = state.nodesById.get(id).effort || {};
+    weight += eff.devWeeksExpected || 0;
+    cost   += eff.costUsdExpected   || 0;
+    externalCost += eff.externalCostsUsd || 0;
+    nonExtCount++;
+  }
+  const totals = svg('text', {
+    class: 'gantt-totals',
+    x: size.w - 12, y: footerY,
+    'text-anchor': 'end'
+  });
+  const costM = (cost + externalCost) / 1_000_000;
+  totals.textContent = `≈ ${nonExtCount} modules · ${weight.toFixed(0)} dev-wk · ~$${costM.toFixed(2)}M`;
+  footer.appendChild(totals);
+
+  // Legend (layers actually present)
+  const legendY = footerY + 22;
+  const presentLayers = [];
+  const seen = new Set();
+  for (const id of state.gantt.rowOrder) {
+    const layer = state.nodesById.get(id).layer;
+    if (seen.has(layer)) continue;
+    seen.add(layer);
+    presentLayers.push(layer);
+  }
+  let legX = 12;
+  for (const layerId of presentLayers) {
+    const layer = state.layerById.get(layerId);
+    const sw = svg('rect', {
+      class: 'gantt-legend-swatch',
+      'data-layer-id': layerId,
+      x: legX, y: legendY - 9, width: 10, height: 10, rx: 2, ry: 2
+    });
+    footer.appendChild(sw);
+    const t = svg('text', {
+      class: 'gantt-legend-label',
+      x: legX + 14, y: legendY
+    });
+    t.textContent = layer?.title ?? layerId;
+    footer.appendChild(t);
+    legX += 14 + (layer?.title?.length ?? layerId.length) * 6.2 + 14;
+  }
+  root.appendChild(footer);
+
+  canvas.appendChild(root);
+}
+
+function truncate(s, n) {
+  if (!s) return '';
+  if (s.length <= n) return s;
+  return s.slice(0, n - 1) + '…';
+}
+
+// ---------- Render dispatcher ----------
+
 function renderCanvas() {
   const canvas = document.getElementById('canvas');
+  document.querySelector('.canvas-wrap').setAttribute('data-view', state.view);
+
+  if (state.view === 'gantt') {
+    renderGantt(canvas);
+    return;
+  }
+
   const size = state.view === 'ladder' ? state.ladderCanvasSize : state.archCanvasSize;
   canvas.setAttribute('width', size.w);
   canvas.setAttribute('height', size.h);
@@ -523,6 +868,10 @@ function renderNodes(canvas, view) {
 }
 
 function applyVisualState() {
+  if (state.view === 'gantt') {
+    applyGanttHoverState();
+    return;
+  }
   // Node states
   document.querySelectorAll('#canvas .node').forEach(g => {
     const id = g.getAttribute('data-id');
@@ -569,6 +918,34 @@ function applyVisualState() {
   });
 }
 
+function applyGanttHoverState() {
+  const hovered = state.hoveredId;
+  const upstream = new Set();
+  if (hovered && state.gantt.rowOrder.includes(hovered)) {
+    // Walk back through hard+progresses deps that are in scope.
+    const deps = new Map();
+    for (const id of state.gantt.rowOrder) deps.set(id, []);
+    for (const e of state.graph.edges) {
+      if (!REQUIRED_TYPES.has(e.type)) continue;
+      if (!deps.has(e.from) || !deps.has(e.to)) continue;
+      deps.get(e.from).push(e.to);
+    }
+    const queue = [hovered];
+    upstream.add(hovered);
+    while (queue.length) {
+      const id = queue.shift();
+      for (const d of deps.get(id) || []) {
+        if (!upstream.has(d)) { upstream.add(d); queue.push(d); }
+      }
+    }
+  }
+  document.querySelectorAll('#canvas .gantt-row').forEach(g => {
+    const id = g.getAttribute('data-id');
+    g.setAttribute('data-hovered', hovered === id ? 'true' : 'false');
+    g.setAttribute('data-upstream', (hovered && upstream.has(id)) ? 'true' : 'false');
+  });
+}
+
 // ---------- View toggle ----------
 
 function setView(nextView) {
@@ -579,10 +956,11 @@ function setView(nextView) {
   document.querySelectorAll('#view-toggle .chip').forEach(c => {
     c.setAttribute('aria-pressed', String(c.dataset.view === nextView));
   });
+  renderConfidenceToggle();
 
-  // Re-render the canvas at the new view. CSS handles the transform/opacity transitions.
   renderCanvas();
   applyVisualState();
+  renderDrawer();
 }
 
 // ---------- Render: drawer ----------
@@ -732,8 +1110,18 @@ function renderDrawer() {
   sectionStats.hidden = total === 0;
   if (!sectionStats.hidden) {
     let weight = 0;
+    let devWeeks = 0;
+    let cost = 0;
+    let externalCost = 0;
     for (const id of [...selectedIds, ...requiredIds]) {
-      weight += state.nodesById.get(id)?.weight || 0;
+      const n = state.nodesById.get(id);
+      weight += n?.weight || 0;
+      const eff = n?.effort;
+      if (eff) {
+        devWeeks += eff.devWeeksExpected || 0;
+        cost += eff.costUsdExpected || 0;
+        externalCost += eff.externalCostsUsd || 0;
+      }
     }
     let bucket;
     if (weight <= 25) bucket = 'Lean · ~3 months';
@@ -742,7 +1130,39 @@ function renderDrawer() {
     else bucket = 'Platform · 18+ months';
     document.getElementById('stats-weight').textContent = weight;
     document.getElementById('stats-bucket').textContent = bucket;
+
+    // Cost rollup (naive sum + critical path / calendar burn)
+    computeSchedule();
+    const cpWeeks = state.gantt.totalWeeks;
+    const peakTeam = peakConcurrentTeam();
+    const usdPerWk = state.graph.costModel?.usdPerDevWeek ?? 10000;
+    const calendarBurn = cpWeeks * peakTeam * usdPerWk + externalCost;
+
+    document.getElementById('stats-devweeks').textContent =
+      devWeeks ? `${devWeeks.toFixed(0)} dev-wk` : '—';
+    document.getElementById('stats-naive').textContent =
+      cost ? `$${((cost + externalCost) / 1_000_000).toFixed(2)}M` : '—';
+    document.getElementById('stats-burn').textContent =
+      cpWeeks ? `~$${(calendarBurn / 1_000_000).toFixed(2)}M · ${cpWeeks.toFixed(0)}wk · peak ${peakTeam}` : '—';
   }
+}
+
+function peakConcurrentTeam() {
+  if (!state.gantt.totalWeeks) return 0;
+  const total = Math.ceil(state.gantt.totalWeeks);
+  let peak = 0;
+  for (let w = 0; w < total; w++) {
+    let active = 0;
+    for (const id of state.gantt.rowOrder) {
+      const s = state.gantt.start.get(id) ?? 0;
+      const e = state.gantt.end.get(id) ?? 0;
+      if (s <= w && w < e) {
+        active += state.nodesById.get(id).effort?.teamSize || 0;
+      }
+    }
+    if (active > peak) peak = active;
+  }
+  return peak;
 }
 
 // ---------- Filters ----------
@@ -793,7 +1213,8 @@ function renderViewToggle() {
   wrap.innerHTML = '';
   for (const v of [
     { id: 'architecture', label: 'Architecture' },
-    { id: 'ladder', label: 'Ladders' }
+    { id: 'ladder', label: 'Ladders' },
+    { id: 'gantt', label: 'Gantt' }
   ]) {
     const btn = document.createElement('button');
     btn.className = 'chip';
@@ -804,6 +1225,41 @@ function renderViewToggle() {
     btn.addEventListener('click', () => setView(v.id));
     wrap.appendChild(btn);
   }
+}
+
+function renderConfidenceToggle() {
+  const wrap = document.getElementById('confidence-toggle');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const label = document.createElement('span');
+  label.className = 'inline-label';
+  label.textContent = 'Confidence';
+  wrap.appendChild(label);
+  for (const v of [
+    { id: 'low', label: 'Low' },
+    { id: 'expected', label: 'Expected' },
+    { id: 'high', label: 'High' }
+  ]) {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.dataset.confidence = v.id;
+    btn.textContent = v.label;
+    btn.setAttribute('aria-pressed', String(state.confidence === v.id));
+    btn.addEventListener('click', () => {
+      if (state.confidence === v.id) return;
+      state.confidence = v.id;
+      try { localStorage.setItem(CONFIDENCE_STORAGE_KEY, v.id); } catch {}
+      renderConfidenceToggle();
+      if (state.view === 'gantt') {
+        renderCanvas();
+        applyVisualState();
+        renderDrawer();
+      }
+    });
+    wrap.appendChild(btn);
+  }
+  wrap.hidden = state.view !== 'gantt';
 }
 
 // ---------- Tooltip ----------
@@ -821,6 +1277,31 @@ function showTooltip(node, evt) {
   s.textContent = node.subtitle;
   const d = document.createElement('div');
   d.textContent = node.description;
+  tt.appendChild(t);
+  tt.appendChild(s);
+  tt.appendChild(d);
+
+  const eff = node.effort;
+  if (eff && eff.devWeeksExpected > 0) {
+    const e = document.createElement('div');
+    e.className = 'tt-effort';
+    const cost = eff.costUsdExpected ? `$${(eff.costUsdExpected / 1000).toFixed(0)}K` : '—';
+    e.textContent = `${eff.devWeeksLow}–${eff.devWeeksExpected}–${eff.devWeeksHigh} dev-wk · ${eff.teamSize} eng · ${cost}`;
+    tt.appendChild(e);
+    if (eff.externalCostsUsd) {
+      const x = document.createElement('div');
+      x.className = 'tt-effort';
+      x.textContent = `+ $${(eff.externalCostsUsd / 1000).toFixed(0)}K external`;
+      tt.appendChild(x);
+    }
+    if (eff.notes) {
+      const n = document.createElement('div');
+      n.className = 'tt-notes';
+      n.textContent = eff.notes;
+      tt.appendChild(n);
+    }
+  }
+
   const m = document.createElement('div');
   m.className = 'tt-meta';
   const ladderInfo = state.ladderTierByNode.get(node.id);
@@ -833,10 +1314,10 @@ function showTooltip(node, evt) {
     const ladder = state.graph.ladders.find(l => l.id === ladderInfo.ladderId);
     parts.push(`${ladder?.title ?? ladderInfo.ladderId} T${ladderInfo.tier}`);
   }
+  if (state.gantt.criticalSet.has(node.id) && state.view === 'gantt') {
+    parts.push('★ critical path');
+  }
   m.textContent = parts.join(' · ');
-  tt.appendChild(t);
-  tt.appendChild(s);
-  tt.appendChild(d);
   tt.appendChild(m);
   moveTooltip(evt);
 }
@@ -886,6 +1367,8 @@ function onNodeLeave(id) {
 function onSelectionChanged() {
   unlocksExpanded = false;
   recompute();
+  computeSchedule();
+  if (state.view === 'gantt') renderCanvas();
   applyVisualState();
   renderDrawer();
   syncUrl();
@@ -960,12 +1443,25 @@ function loadPreset(id) {
 
 // ---------- Actions ----------
 
+function exportArtifact() {
+  if (state.view === 'gantt') exportGanttCsv();
+  else exportJson();
+}
+
 function exportJson() {
   const requiredIds = [...state.derived.required];
   const selectedIds = [...state.selected];
   let weight = 0;
+  let cost = 0;
+  let externalCost = 0;
   for (const id of [...selectedIds, ...requiredIds]) {
-    weight += state.nodesById.get(id)?.weight || 0;
+    const n = state.nodesById.get(id);
+    weight += n?.weight || 0;
+    const eff = n?.effort;
+    if (eff) {
+      cost += eff.costUsdExpected || 0;
+      externalCost += eff.externalCostsUsd || 0;
+    }
   }
   const payload = {
     timestamp: new Date().toISOString(),
@@ -973,6 +1469,8 @@ function exportJson() {
     required: requiredIds,
     soft_suggestions: [...state.derived.softSuggestions],
     total_weight: weight,
+    total_cost_usd: cost,
+    external_costs_usd: externalCost,
     node_count: selectedIds.length + requiredIds.length
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -981,6 +1479,48 @@ function exportJson() {
   const date = new Date().toISOString().slice(0, 10);
   a.href = url;
   a.download = `opal-scope-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportGanttCsv() {
+  // Make sure schedule is fresh
+  computeSchedule();
+
+  const cols = ['id', 'title', 'layer', 'start_week', 'end_week', 'duration_weeks',
+                'team_size', 'cost_usd', 'on_critical_path', 'notes'];
+  const rows = [cols.join(',')];
+  for (const id of state.gantt.rowOrder) {
+    const node = state.nodesById.get(id);
+    const eff = node.effort || {};
+    rows.push([
+      csvEscape(id),
+      csvEscape(node.title),
+      csvEscape(node.layer),
+      csvEscape((state.gantt.start.get(id) ?? 0).toFixed(1)),
+      csvEscape((state.gantt.end.get(id) ?? 0).toFixed(1)),
+      csvEscape((state.gantt.duration.get(id) ?? 0).toFixed(1)),
+      csvEscape(eff.teamSize ?? ''),
+      csvEscape(eff.costUsdExpected ?? ''),
+      csvEscape(state.gantt.criticalSet.has(id) ? 'true' : 'false'),
+      csvEscape(eff.notes ?? '')
+    ].join(','));
+  }
+  const blob = new Blob([rows.join('\n') + '\n'], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `opal-gantt-${date}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1007,7 +1547,7 @@ function resetSelection() {
 
 function wire() {
   document.getElementById('reset-btn').addEventListener('click', resetSelection);
-  document.getElementById('export-btn').addEventListener('click', exportJson);
+  document.getElementById('export-btn').addEventListener('click', exportArtifact);
   document.getElementById('share-btn').addEventListener('click', copyShareLink);
   document.getElementById('empty-load-mvp').addEventListener('click', () => loadPreset('lean-mvp'));
   document.getElementById('unlocks-show-all').addEventListener('click', () => {
@@ -1065,14 +1605,21 @@ async function boot() {
 
   try {
     const v = localStorage.getItem(VIEW_STORAGE_KEY);
-    if (v === 'architecture' || v === 'ladder') state.view = v;
+    if (v === 'architecture' || v === 'ladder' || v === 'gantt') state.view = v;
+  } catch {}
+
+  try {
+    const c = localStorage.getItem(CONFIDENCE_STORAGE_KEY);
+    if (c === 'low' || c === 'expected' || c === 'high') state.confidence = c;
   } catch {}
 
   renderFilterChips();
   renderViewToggle();
+  renderConfidenceToggle();
   renderPresetPicker();
-  renderCanvas();
   recompute();
+  computeSchedule(); // so drawer stats can read state.gantt at first render
+  renderCanvas();
   applyVisualState();
   renderDrawer();
   wire();

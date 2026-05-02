@@ -1,11 +1,22 @@
 # Opal Feature Explorer
 
-Static single-page web app that displays the complete Opal feature graph (71 nodes, 144 edges, 10 layers, 8 maturity ladders, 4 presets). Two views:
+Static single-page web app that displays the complete Opal feature graph (71 nodes, 144 edges, 10 layers, 8 maturity ladders, 4 presets). Three views:
 
 - **Architecture** — swim-lane DAG by layer.
 - **Ladders** — same nodes re-arranged by capability dimension and tier.
+- **Gantt** — earliest-start schedule with critical-path highlighting, confidence band toggle (Low / Expected / High), and CSV export.
 
-Click any feature to add it to a working scope; the page pulls in every transitive `hard` and `progresses` dependency, suggests `soft` enhancements, and surfaces what would unlock next.
+Click any feature to add it to a working scope; the page pulls in every transitive `hard` and `progresses` dependency, suggests `soft` enhancements, surfaces what would unlock next, and rolls up dev-weeks and cost.
+
+### Estimates
+
+Per-module effort lives on each node as an `effort` object (`devWeeksLow / Expected / High`, `teamSize`, `costUsdExpected`, optional `externalCostsUsd` and `notes`). Estimates are seeded by the rule-based generator at `scripts/seed_effort.py` (rule + 11 hand-overrides — see `opal_estimation_spec.md`). To regenerate after editing the rule or overrides:
+
+```bash
+python3 scripts/seed_effort.py
+```
+
+The cost rate (`costModel.usdPerDevWeek`, default $10K/wk) is applied at seed time and denormalized into each node's `costUsdExpected`.
 
 ## Run locally
 
