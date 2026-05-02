@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Opal Feature Explorer</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="style.css?v=86574a7-20260502112939" />
+  <link rel="stylesheet" href="style.css?v=3b5606f-20260502114600" />
 </head>
 <body>
   <header class="topbar">
@@ -95,6 +95,12 @@
         <p class="disclaimer">When on, every dev-week is divided by 10 — an aggressive but useful what-if for Codex-assisted teams.</p>
       </section>
 
+      <section class="drawer-section devs-section">
+        <h2>Concurrent developers</h2>
+        <div class="filter-group devs-toggle" id="devs-toggle" aria-label="Team-size cap"></div>
+        <p class="disclaimer">Caps how many engineers can work in parallel. ∞ assumes one engineer per module the moment its dependencies are met (the lower bound). Pick a real number to see how the schedule stretches when the team is small.</p>
+      </section>
+
       <section class="drawer-section actions">
         <div class="preset-picker">
           <label for="preset-select">Load preset</label>
@@ -111,6 +117,6 @@
   <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="app.js?v=86574a7-20260502112939"></script>
+  <script src="app.js?v=3b5606f-20260502114600"></script>
 </body>
 </html>

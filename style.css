@@ -288,8 +288,8 @@ button {
 }
 .disclaimer { margin: 4px 0 0; font-size: 10px; color: var(--text-faint); }
 
-.rate-section, .ai-section { margin-bottom: 14px; }
-.ai-toggle {
+.rate-section, .ai-section, .devs-section { margin-bottom: 14px; }
+.ai-toggle, .devs-toggle {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;

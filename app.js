@@ -38,6 +38,7 @@ const VIEW_STORAGE_KEY = 'opal-explorer-view';
 const CONFIDENCE_STORAGE_KEY = 'opal-explorer-confidence';
 const RATE_STORAGE_KEY = 'opal-explorer-usd-per-week';
 const AI_STORAGE_KEY = 'opal-explorer-ai-boost';
+const DEVS_STORAGE_KEY = 'opal-explorer-max-devs';
 
 const state = {
   graph: null,
@@ -65,6 +66,7 @@ const state = {
   usdPerWeek: 10000,              // runtime rate; seeded from costModel.usdPerDevWeek
   aiBoost: false,                 // true → divide every duration by AI_BOOST_MULTIPLIER
   aiBoostMultiplier: 10,          // "10× faster" assumption when toggle is on
+  maxDevs: null,                  // null = unlimited; otherwise a hard cap on concurrent engineers
 
   // Last computed Gantt schedule
   gantt: {
@@ -412,6 +414,87 @@ function externalCostFor(node) {
   return node.effort?.externalCostsUsd || 0;
 }
 
+// Resource-constrained list scheduler. Each module needs effort.teamSize
+// concurrent engineers; if that exceeds maxDevs, we squeeze the team and
+// stretch the calendar (preserves total person-weeks).
+function listSchedule(scheduled, depsOf, priority, maxDevs) {
+  const start = new Map();
+  const end = new Map();
+  const duration = new Map();
+
+  // Effective demand & duration for one module given the cap.
+  const demandFor = (id) => {
+    const node = state.nodesById.get(id);
+    const ts = node.effort?.teamSize || 1;
+    return Math.max(1, Math.min(ts, maxDevs));
+  };
+  const calendarFor = (id) => {
+    const node = state.nodesById.get(id);
+    const ts = node.effort?.teamSize || 1;
+    const eff = demandFor(id);
+    return durationFor(node) * (ts / eff);
+  };
+
+  const remainingDeps = new Map();
+  for (const id of scheduled) remainingDeps.set(id, depsOf.get(id).size);
+
+  const ready = [];
+  for (const id of scheduled) {
+    if (remainingDeps.get(id) === 0) ready.push(id);
+  }
+  // Priority: unconstrained-end descending (later → more critical → schedule first).
+  const sortReady = () => ready.sort((a, b) => (priority.get(b) ?? 0) - (priority.get(a) ?? 0));
+
+  // active = [{ id, finishAt, devs }]
+  const active = [];
+  let now = 0;
+  let free = maxDevs;
+
+  // Reverse edges for unblocking: id -> list of dependents.
+  const dependentsOf = new Map();
+  for (const id of scheduled) dependentsOf.set(id, []);
+  for (const id of scheduled) {
+    for (const dep of depsOf.get(id)) dependentsOf.get(dep).push(id);
+  }
+
+  function tryStart() {
+    sortReady();
+    let i = 0;
+    while (i < ready.length) {
+      const id = ready[i];
+      const need = demandFor(id);
+      if (need > free) { i++; continue; }   // skip; try the next ready module
+      ready.splice(i, 1);
+      const dur = calendarFor(id);
+      start.set(id, now);
+      duration.set(id, dur);
+      end.set(id, now + dur);
+      active.push({ id, finishAt: now + dur, devs: need });
+      free -= need;
+    }
+  }
+
+  tryStart();
+  let safetyValve = scheduled.length * 4 + 10;
+  while (active.length && safetyValve-- > 0) {
+    active.sort((a, b) => a.finishAt - b.finishAt);
+    const t = active[0].finishAt;
+    while (active.length && active[0].finishAt - t < 1e-9) {
+      const m = active.shift();
+      free += m.devs;
+      for (const dep of dependentsOf.get(m.id)) {
+        const r = (remainingDeps.get(dep) ?? 0) - 1;
+        remainingDeps.set(dep, r);
+        if (r === 0) ready.push(dep);
+      }
+    }
+    now = t;
+    tryStart();
+  }
+
+  return { start, end, duration };
+}
+
 function computeSchedule() {
   const inScope = new Set([...state.selected, ...state.derived.required]);
 
@@ -433,41 +516,63 @@ function computeSchedule() {
     depsOf.get(e.from).add(e.to);
   }
 
-  const start = new Map();
-  const end = new Map();
-  const duration = new Map();
+  // Phase 1: unconstrained earliest-start schedule. Used both as the baseline
+  // (when maxDevs is null) and as the priority signal for the constrained pass.
+  const unconstrainedEnd = new Map();
+  const unconstrainedStart = new Map();
   const visiting = new Set();
-
-  function compute(id) {
-    if (end.has(id)) return;
-    if (visiting.has(id)) return; // safety against unexpected cycles
+  function computeUnconstrained(id) {
+    if (unconstrainedEnd.has(id)) return;
+    if (visiting.has(id)) return;
     visiting.add(id);
     const deps = [...depsOf.get(id)];
-    for (const d of deps) compute(d);
-    const s = deps.length ? Math.max(...deps.map(d => end.get(d) ?? 0)) : 0;
+    for (const d of deps) computeUnconstrained(d);
+    const s = deps.length ? Math.max(...deps.map(d => unconstrainedEnd.get(d) ?? 0)) : 0;
     const dur = durationFor(state.nodesById.get(id));
-    start.set(id, s);
-    duration.set(id, dur);
-    end.set(id, s + dur);
+    unconstrainedStart.set(id, s);
+    unconstrainedEnd.set(id, s + dur);
     visiting.delete(id);
   }
-  for (const id of scheduled) compute(id);
+  for (const id of scheduled) computeUnconstrained(id);
 
-  const totalWeeks = end.size ? Math.max(...end.values()) : 0;
-
-  // Critical path: trace back from the latest-ending node, picking the dep with the latest end.
+  // Critical path: trace back through the unconstrained schedule.
   const criticalPath = [];
-  if (end.size) {
-    let cur = scheduled.reduce((best, id) => (end.get(id) > end.get(best) ? id : best), scheduled[0]);
+  if (unconstrainedEnd.size) {
+    let cur = scheduled.reduce(
+      (best, id) => (unconstrainedEnd.get(id) > unconstrainedEnd.get(best) ? id : best),
+      scheduled[0]
+    );
     criticalPath.unshift(cur);
     while (true) {
       const deps = [...depsOf.get(cur)];
       if (!deps.length) break;
-      cur = deps.reduce((best, d) => (end.get(d) > end.get(best) ? d : best), deps[0]);
+      cur = deps.reduce(
+        (best, d) => (unconstrainedEnd.get(d) > unconstrainedEnd.get(best) ? d : best),
+        deps[0]
+      );
       criticalPath.unshift(cur);
     }
   }
   const criticalSet = new Set(criticalPath);
+
+  // Phase 2: schedule. If maxDevs is null, use unconstrained directly. Otherwise
+  // run a list scheduler with priority = unconstrained end (latest first).
+  let start, end, duration;
+  if (state.maxDevs == null) {
+    start = unconstrainedStart;
+    end = unconstrainedEnd;
+    duration = new Map();
+    for (const id of scheduled) {
+      duration.set(id, durationFor(state.nodesById.get(id)));
+    }
+  } else {
+    const result = listSchedule(scheduled, depsOf, unconstrainedEnd, state.maxDevs);
+    start = result.start;
+    end = result.end;
+    duration = result.duration;
+  }
+
+  const totalWeeks = end.size ? Math.max(...end.values()) : 0;
 
   // Row order: layer order, then ascending start week.
   const layerOrder = new Map();
@@ -1267,6 +1372,38 @@ function renderViewToggle() {
   }
 }
 
+function renderDevsToggle() {
+  const wrap = document.getElementById('devs-toggle');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const opts = [
+    { id: '1',   label: '1',   value: 1 },
+    { id: '2',   label: '2',   value: 2 },
+    { id: '5',   label: '5',   value: 5 },
+    { id: '10',  label: '10',  value: 10 },
+    { id: 'inf', label: '∞',   value: null }
+  ];
+  for (const v of opts) {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.dataset.devs = v.id;
+    btn.textContent = v.label;
+    btn.setAttribute('aria-pressed', String(state.maxDevs === v.value));
+    btn.addEventListener('click', () => {
+      if (state.maxDevs === v.value) return;
+      state.maxDevs = v.value;
+      try {
+        if (v.value == null) localStorage.removeItem(DEVS_STORAGE_KEY);
+        else localStorage.setItem(DEVS_STORAGE_KEY, String(v.value));
+      } catch {}
+      renderDevsToggle();
+      onAiBoostChanged();   // same downstream re-render path
+    });
+    wrap.appendChild(btn);
+  }
+}
+
 function renderAiToggle() {
   const wrap = document.getElementById('ai-toggle');
   if (!wrap) return;
@@ -1734,10 +1871,16 @@ async function boot() {
     state.aiBoost = localStorage.getItem(AI_STORAGE_KEY) === '1';
   } catch {}
 
+  try {
+    const d = parseInt(localStorage.getItem(DEVS_STORAGE_KEY) || '', 10);
+    state.maxDevs = Number.isFinite(d) && d > 0 ? d : null;
+  } catch {}
+
   renderFilterChips();
   renderViewToggle();
   renderConfidenceToggle();
   renderAiToggle();
+  renderDevsToggle();
   renderPresetPicker();
   recompute();
   computeSchedule(); // so drawer stats can read state.gantt at first render
