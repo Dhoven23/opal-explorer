@@ -37,6 +37,7 @@ const STORAGE_KEY = 'opal-explorer-selection';
 const VIEW_STORAGE_KEY = 'opal-explorer-view';
 const CONFIDENCE_STORAGE_KEY = 'opal-explorer-confidence';
 const RATE_STORAGE_KEY = 'opal-explorer-usd-per-week';
+const AI_STORAGE_KEY = 'opal-explorer-ai-boost';
 
 const state = {
   graph: null,
@@ -62,6 +63,8 @@ const state = {
   view: 'architecture',           // 'architecture' | 'ladder' | 'gantt'
   confidence: 'expected',         // 'low' | 'expected' | 'high'
   usdPerWeek: 10000,              // runtime rate; seeded from costModel.usdPerDevWeek
+  aiBoost: false,                 // true → divide every duration by AI_BOOST_MULTIPLIER
+  aiBoostMultiplier: 10,          // "10× faster" assumption when toggle is on
 
   // Last computed Gantt schedule
   gantt: {
@@ -386,12 +389,18 @@ function svg(tag, attrs = {}, children = []) {
 
 // ---------- Gantt scheduling ----------
 
+function aiDivisor() {
+  return state.aiBoost ? state.aiBoostMultiplier : 1;
+}
+
 function durationFor(node) {
   const eff = node.effort || {};
   const c = state.confidence;
-  if (c === 'low') return eff.devWeeksLow ?? 0;
-  if (c === 'high') return eff.devWeeksHigh ?? 0;
-  return eff.devWeeksExpected ?? 0;
+  let base;
+  if (c === 'low') base = eff.devWeeksLow ?? 0;
+  else if (c === 'high') base = eff.devWeeksHigh ?? 0;
+  else base = eff.devWeeksExpected ?? 0;
+  return base / aiDivisor();
 }
 
 function costForNode(node) {
@@ -1160,8 +1169,9 @@ function renderDrawer() {
       devWeeks ? `${devWeeks.toFixed(0)} dev-wk` : '—';
     document.getElementById('stats-naive').textContent =
       cost ? `$${((cost + externalCost) / 1_000_000).toFixed(2)}M` : '—';
+    const burnSuffix = state.aiBoost ? ` · AI ${state.aiBoostMultiplier}×` : '';
     document.getElementById('stats-burn').textContent =
-      cpWeeks ? `~$${(calendarBurn / 1_000_000).toFixed(2)}M · ${cpWeeks.toFixed(0)}wk · peak ${peakTeam}` : '—';
+      cpWeeks ? `~$${(calendarBurn / 1_000_000).toFixed(2)}M · ${cpWeeks.toFixed(0)}wk · peak ${peakTeam}${burnSuffix}` : '—';
   }
 }
 
@@ -1245,6 +1255,39 @@ function renderViewToggle() {
   }
 }
 
+function renderAiToggle() {
+  const wrap = document.getElementById('ai-toggle');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  for (const v of [
+    { id: 'off', label: 'Off (1×)', on: false },
+    { id: 'codex', label: `Codex (${state.aiBoostMultiplier}×)`, on: true }
+  ]) {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.dataset.aiBoost = v.id;
+    btn.textContent = v.label;
+    btn.setAttribute('aria-pressed', String(state.aiBoost === v.on));
+    btn.addEventListener('click', () => {
+      if (state.aiBoost === v.on) return;
+      state.aiBoost = v.on;
+      try { localStorage.setItem(AI_STORAGE_KEY, v.on ? '1' : '0'); } catch {}
+      renderAiToggle();
+      onAiBoostChanged();
+    });
+    wrap.appendChild(btn);
+  }
+}
+
+function onAiBoostChanged() {
+  recompute();
+  computeSchedule();
+  if (state.view === 'gantt') renderCanvas();
+  applyVisualState();
+  renderDrawer();
+}
+
 function renderConfidenceToggle() {
   const wrap = document.getElementById('confidence-toggle');
   if (!wrap) return;
@@ -1306,7 +1349,10 @@ function showTooltip(node, evt) {
     const dur = durationFor(node);
     const cost = costForNode(node);
     const costStr = cost ? `$${(cost / 1000).toFixed(0)}K` : '—';
-    e.textContent = `${eff.devWeeksLow}–${eff.devWeeksExpected}–${eff.devWeeksHigh} dev-wk · ${eff.teamSize} eng · ${dur.toFixed(1)} wk @ ${state.confidence} → ${costStr}`;
+    const div = aiDivisor();
+    const fmt = v => (v / div).toFixed(div === 1 ? 0 : 1);
+    const aiHint = state.aiBoost ? ` · AI ${state.aiBoostMultiplier}×` : '';
+    e.textContent = `${fmt(eff.devWeeksLow)}–${fmt(eff.devWeeksExpected)}–${fmt(eff.devWeeksHigh)} dev-wk · ${eff.teamSize} eng · ${dur.toFixed(1)} wk @ ${state.confidence}${aiHint} → ${costStr}`;
     tt.appendChild(e);
     if (eff.externalCostsUsd) {
       const x = document.createElement('div');
@@ -1665,9 +1711,14 @@ async function boot() {
     if (Number.isFinite(r) && r > 0) state.usdPerWeek = r;
   } catch {}
 
+  try {
+    state.aiBoost = localStorage.getItem(AI_STORAGE_KEY) === '1';
+  } catch {}
+
   renderFilterChips();
   renderViewToggle();
   renderConfidenceToggle();
+  renderAiToggle();
   renderPresetPicker();
   recompute();
   computeSchedule(); // so drawer stats can read state.gantt at first render
