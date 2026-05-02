@@ -31,7 +31,7 @@ const ROW_H = 24;
 const BAR_H = 18;
 const BAR_PAD_TOP = 3;
 const HEADER_H = 50;
-const FOOTER_H = 70;
+const FOOTER_H = 80;
 
 const STORAGE_KEY = 'opal-explorer-selection';
 const VIEW_STORAGE_KEY = 'opal-explorer-view';
@@ -628,16 +628,10 @@ function renderGantt(canvas) {
 
   // --- Footer ---
   const footer = svg('g', { 'data-layer': 'gantt-footer' });
-  const footerY = chartBottom + 18;
-  const cpLabel = svg('text', { class: 'gantt-cp-label', x: 12, y: footerY });
-  const cpTitles = state.gantt.criticalPath
-    .map(id => state.nodesById.get(id)?.title ?? id)
-    .join(' → ');
-  cpLabel.textContent = `★ Critical path: ${state.gantt.totalWeeks.toFixed(1)} wk — ${cpTitles}`;
-  footer.appendChild(cpLabel);
+  const cpRowY = chartBottom + 20;
+  const legendRowY = chartBottom + 44;
 
-  // Totals readout
-  const inScopeIds = new Set([...state.selected, ...state.derived.required]);
+  // Tally totals first so we know what to leave room for on the CP row.
   let weight = 0;
   let cost = 0;
   let externalCost = 0;
@@ -649,17 +643,25 @@ function renderGantt(canvas) {
     externalCost += eff.externalCostsUsd || 0;
     nonExtCount++;
   }
-  const totals = svg('text', {
-    class: 'gantt-totals',
-    x: size.w - 12, y: footerY,
-    'text-anchor': 'end'
-  });
   const costM = (cost + externalCost) / 1_000_000;
-  totals.textContent = `≈ ${nonExtCount} modules · ${weight.toFixed(0)} dev-wk · ~$${costM.toFixed(2)}M`;
-  footer.appendChild(totals);
+  const totalsText = `≈ ${nonExtCount} modules · ${weight.toFixed(0)} dev-wk · ~$${costM.toFixed(2)}M`;
 
-  // Legend (layers actually present)
-  const legendY = footerY + 22;
+  // Critical-path summary on its own row, truncated to fit available width.
+  const cpHeader = `★ Critical path: ${state.gantt.totalWeeks.toFixed(1)} wk — `;
+  const cpTitlesFull = state.gantt.criticalPath
+    .map(id => state.nodesById.get(id)?.title ?? id)
+    .join(' → ');
+  const availPx = Math.max(size.w - 24, 160);
+  const charPx = 6.2;
+  const maxChars = Math.max(20, Math.floor(availPx / charPx) - cpHeader.length);
+  const cpTitles = cpTitlesFull.length > maxChars
+    ? cpTitlesFull.slice(0, maxChars - 1) + '…'
+    : cpTitlesFull;
+  const cpLabel = svg('text', { class: 'gantt-cp-label', x: 12, y: cpRowY });
+  cpLabel.textContent = cpHeader + cpTitles;
+  footer.appendChild(cpLabel);
+
+  // Legend (layers actually present) on the second row, totals right-aligned on the same row.
   const presentLayers = [];
   const seen = new Set();
   for (const id of state.gantt.rowOrder) {
@@ -674,17 +676,25 @@ function renderGantt(canvas) {
     const sw = svg('rect', {
       class: 'gantt-legend-swatch',
       'data-layer-id': layerId,
-      x: legX, y: legendY - 9, width: 10, height: 10, rx: 2, ry: 2
+      x: legX, y: legendRowY - 9, width: 10, height: 10, rx: 2, ry: 2
     });
     footer.appendChild(sw);
     const t = svg('text', {
       class: 'gantt-legend-label',
-      x: legX + 14, y: legendY
+      x: legX + 14, y: legendRowY
     });
     t.textContent = layer?.title ?? layerId;
     footer.appendChild(t);
     legX += 14 + (layer?.title?.length ?? layerId.length) * 6.2 + 14;
   }
+  const totals = svg('text', {
+    class: 'gantt-totals',
+    x: size.w - 12, y: legendRowY,
+    'text-anchor': 'end'
+  });
+  totals.textContent = totalsText;
+  footer.appendChild(totals);
+
   root.appendChild(footer);
 
   canvas.appendChild(root);
